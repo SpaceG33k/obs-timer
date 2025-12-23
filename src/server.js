@@ -1,0 +1,81 @@
+const express = require('express');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+const path = require('path');
+
+const { initializeDatabase } = require('./db/init');
+const TimerManager = require('./timer/TimerManager');
+const { setupSocketHandlers } = require('./socket/handlers');
+
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+
+// Initialize database
+initializeDatabase();
+
+// Create timer manager
+const timerManager = new TimerManager(io);
+
+// Restore any running timers from database
+timerManager.restoreTimers();
+
+// Setup socket handlers
+setupSocketHandlers(io, timerManager);
+
+// Serve static files
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: Date.now() });
+});
+
+// API endpoint to get room state (for debugging/integrations)
+app.get('/api/room/:channel', (req, res) => {
+  const { channel } = req.params;
+  const sanitizedChannel = channel.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+
+  if (!sanitizedChannel) {
+    return res.status(400).json({ error: 'Invalid channel name' });
+  }
+
+  const state = timerManager.getState(sanitizedChannel);
+  res.json(state);
+});
+
+// Routes - serve HTML pages
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+app.get('/overlay', (req, res) => {
+  const room = req.query.room;
+  if (!room) {
+    return res.redirect('/?error=missing_room');
+  }
+  res.sendFile(path.join(__dirname, '../public/overlay.html'));
+});
+
+app.get('/control', (req, res) => {
+  const room = req.query.room;
+  if (!room) {
+    return res.redirect('/?error=missing_room');
+  }
+  res.sendFile(path.join(__dirname, '../public/control.html'));
+});
+
+// Start server
+httpServer.listen(PORT, () => {
+  console.log(`OBS Timer server running on http://localhost:${PORT}`);
+  console.log(`  - Instructions: http://localhost:${PORT}/`);
+  console.log(`  - Control panel: http://localhost:${PORT}/control?room=<your-room>`);
+  console.log(`  - OBS Overlay: http://localhost:${PORT}/overlay?room=<your-room>`);
+});

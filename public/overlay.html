@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OBS Timer Overlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      background: transparent !important;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+    }
+
+    #timer-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+    }
+
+    #timer {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 72px;
+      font-weight: 600;
+      color: #FFFFFF;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+      white-space: nowrap;
+      transition: opacity 0.3s ease;
+    }
+
+    #timer.hidden {
+      opacity: 0;
+    }
+
+    /* Container for exploding characters */
+    .char-particle {
+      position: fixed;
+      pointer-events: none;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      color: inherit;
+      text-shadow: inherit;
+      -webkit-text-stroke: inherit;
+      z-index: 1000;
+    }
+
+    #error {
+      display: none;
+      color: #ff4444;
+      font-family: system-ui, sans-serif;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    #error.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="timer-container">
+    <div id="timer">00:00</div>
+    <div id="error"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="/js/shared.js"></script>
+  <script src="/js/overlay.js"></script>
+</body>
+</html>
