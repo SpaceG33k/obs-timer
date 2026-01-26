@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const path = require('path');
 
 const { initializeDatabase } = require('./db/init');
+const { deleteStaleRooms } = require('./db/queries');
 const TimerManager = require('./timer/TimerManager');
 const { setupSocketHandlers } = require('./socket/handlers');
 
@@ -42,6 +43,21 @@ timerManager.restoreTimers();
 
 // Setup socket handlers
 setupSocketHandlers(io, timerManager);
+
+// Stale room cleanup
+const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const ROOM_MAX_AGE_DAYS = parseInt(process.env.ROOM_MAX_AGE_DAYS, 10) || 30;
+
+function runCleanup() {
+  const deleted = deleteStaleRooms(ROOM_MAX_AGE_DAYS);
+  if (deleted > 0) {
+    console.log(`Cleaned up ${deleted} stale room(s)`);
+  }
+}
+
+// Run cleanup on startup and then daily
+runCleanup();
+setInterval(runCleanup, CLEANUP_INTERVAL_MS);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, '../public')));

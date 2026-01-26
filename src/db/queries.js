@@ -97,10 +97,20 @@ function getAllRooms() {
   return db.prepare('SELECT * FROM rooms').all();
 }
 
+function deleteStaleRooms(maxAgeDays = 30) {
+  const cutoff = Date.now() - (maxAgeDays * 24 * 60 * 60 * 1000);
+  const result = db.prepare(`
+    DELETE FROM rooms
+    WHERE is_running = 0 AND updated_at < ?
+  `).run(cutoff);
+  return result.changes;
+}
+
 module.exports = {
   getRoom,
   getOrCreateRoom,
   updateRoom,
   getAllRooms,
+  deleteStaleRooms,
   defaultRoom
 };
