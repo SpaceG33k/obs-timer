@@ -12,7 +12,6 @@
 
   // Elements
   const channelName = document.getElementById('channel-name');
-  const statusIndicator = document.getElementById('status');
   const timerPreview = document.getElementById('timer-preview');
   const obsUrlInput = document.getElementById('obs-url');
 
@@ -61,16 +60,18 @@
   const baseUrl = window.location.origin;
   obsUrlInput.value = `${baseUrl}/overlay?room=${room}`;
 
-  // Update status indicator
+  // Update button states to reflect timer status
   function updateStatus(isRunning) {
     if (isRunning) {
-      statusIndicator.classList.remove('stopped');
-      statusIndicator.classList.add('running');
-      statusIndicator.querySelector('.status-text').textContent = 'Running';
+      btnStart.classList.add('disabled');
+      btnStart.classList.remove('active');
+      btnStop.classList.remove('disabled');
+      btnStop.classList.add('active');
     } else {
-      statusIndicator.classList.remove('running');
-      statusIndicator.classList.add('stopped');
-      statusIndicator.querySelector('.status-text').textContent = 'Stopped';
+      btnStart.classList.remove('disabled');
+      btnStart.classList.add('active');
+      btnStop.classList.add('disabled');
+      btnStop.classList.remove('active');
     }
   }
 

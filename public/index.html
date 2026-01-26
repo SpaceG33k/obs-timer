@@ -3,7 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OBS Timer</title>
+  <title>OBS Timer - Free Countdown & Countup Overlay for OBS Studio</title>
+  <meta name="description" content="Free, self-hosted countdown and countup timer overlay for OBS Studio. Features real-time sync, customizable styling, multi-room support, and persistent state. Perfect for streams and broadcasts.">
+  <meta name="keywords" content="OBS timer, OBS overlay, countdown timer, countup timer, streaming timer, OBS Studio, browser source, live streaming">
+  <meta name="author" content="OBS Timer">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="OBS Timer - Free Countdown & Countup Overlay for OBS Studio">
+  <meta property="og:description" content="Free, self-hosted countdown and countup timer overlay for OBS Studio. Real-time sync, customizable styling, and multi-room support.">
+  <meta property="og:image" content="/og-image.png">
+  <meta property="og:url" content="">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="OBS Timer - Free Countdown & Countup Overlay for OBS Studio">
+  <meta name="twitter:description" content="Free, self-hosted countdown and countup timer overlay for OBS Studio. Real-time sync, customizable styling, and multi-room support.">
+  <meta name="twitter:image" content="/og-image.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "OBS Timer",
+    "description": "Free, self-hosted countdown and countup timer overlay for OBS Studio with real-time sync and customizable styling.",
+    "applicationCategory": "Multimedia",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "Countdown timer",
+      "Countup timer",
+      "Real-time sync",
+      "Customizable styling",
+      "Multi-room support",
+      "Persistent state",
+      "OBS browser source compatible"
+    ]
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -166,7 +215,7 @@
       border-radius: 12px;
     }
 
-    .feature h4 {
+    .feature h3 {
       font-size: 1rem;
       margin-bottom: 8px;
       color: #fff;
@@ -198,121 +247,86 @@
       margin-top: 60px;
       padding-bottom: 40px;
     }
+
+    /* Screen reader only - for accessibility */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="hero">
+  <main class="container">
+    <header class="hero">
       <h1>OBS Timer</h1>
-      <p>Countdown and countup timer overlay for OBS</p>
-    </div>
+      <p>Free countdown and countup timer overlay for OBS Studio</p>
+    </header>
 
     <div id="error-banner" class="error-banner"></div>
 
-    <div class="quick-start">
-      <h2>Quick Start</h2>
-      <p style="color: #94a3b8; margin-bottom: 16px;">Enter a room name to create your timer. Use any name you like, it's just for separating different timers.</p>
+    <section class="quick-start" aria-labelledby="quickstart-heading">
+      <h2 id="quickstart-heading">Quick Start</h2>
+      <p style="color: #94a3b8; margin-bottom: 16px;">Enter a room name to create your timer.
+        <br>Use any name you like, it's just for separating different timers.
+      </p>
 
-      <div class="input-group">
-        <input type="text" id="room-input" placeholder="Enter room name (e.g., mystream)">
-        <button id="go-btn">Open Control Panel</button>
-      </div>
+      <form class="input-group" onsubmit="goToRoom(); return false;">
+        <label for="room-input" class="sr-only">Room name</label>
+        <input type="text" id="room-input" placeholder="Enter room name (e.g., mystream)" aria-describedby="room-hint">
+        <button type="submit" id="go-btn">Open Control Panel</button>
+      </form>
+      <p id="room-hint" class="sr-only">Room names can contain letters, numbers, hyphens, and underscores.</p>
+    </section>
 
-      <p style="color: #64748b; font-size: 0.875rem;">No account needed. Your room is created automatically.</p>
-    </div>
-
-    <div class="section">
-      <h2>How It Works</h2>
-
+    <section class="section" aria-labelledby="features-heading">
+      <h2 id="features-heading">How It Works</h2>
       <div class="features">
-        <div class="feature">
-          <h4>Multi-Room Support</h4>
-          <p>Each room is independent. Create as many rooms as needed.</p>
-        </div>
-        <div class="feature">
-          <h4>Real-Time Sync</h4>
-          <p>Control panel and OBS overlay update instantly via WebSocket.</p>
-        </div>
-        <div class="feature">
-          <h4>Customizable</h4>
+        <article class="feature">
+          <h3>Count Down</h3>
+          <p>Count down from a set duration. Choose what happens at zero.</p>
+        </article>
+        <article class="feature">
+          <h3>Count Up</h3>
+          <p>Count up from zero. Great for tracking elapsed time with no end limit.</p>
+        </article>
+        <article class="feature">
+          <h3>Customizable</h3>
           <p>Adjust font, size, colors, shadows, and more from the control panel.</p>
-        </div>
-        <div class="feature">
-          <h4>Persistent</h4>
-          <p>Timer state and settings are saved. Survives server restarts.</p>
-        </div>
+        </article>
+        <article class="feature">
+          <h3>Real-Time Sync</h3>
+          <p>Control panel and OBS overlay updates instantly via WebSocket.</p>
+        </article>
+        <article class="feature">
+          <h3>Persistent</h3>
+          <p>Timer state and settings are saved automatically.</p>
+        </article>
+        <article class="feature">
+          <h3>OBS Ready</h3>
+          <p>Transparent background overlay designed for OBS browser sources.</p>
+        </article>
       </div>
-    </div>
-
-    <div class="section">
-      <h2>Setting Up in OBS</h2>
-
-      <ol>
-        <li>Open OBS Studio and go to your scene</li>
-        <li>Click the <strong>+</strong> button under Sources and select <strong>Browser</strong></li>
-        <li>Name it "Timer" (or whatever you prefer)</li>
-        <li>Set the URL to your overlay URL:
-          <div class="code-block" id="obs-url-example"></div>
-        </li>
-        <li>Click <strong>OK</strong></li>
-      </ol>
-
-      <div class="tip">
-        <p><strong>Tip:</strong> The overlay has a transparent background. Position and resize the source to place the timer where you want it on screen.</p>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>URL Reference</h2>
-
-      <h3>Control Panel</h3>
-      <p>Use this URL to control your timer from any browser:</p>
-      <div class="code-block">/control?room=yourroomname</div>
-
-      <h3>OBS Overlay</h3>
-      <p>Use this URL in OBS Browser Source:</p>
-      <div class="code-block">/overlay?room=yourroomname</div>
-
-      <h3>API Endpoint</h3>
-      <p>Get current timer state as JSON (for integrations):</p>
-      <div class="code-block">/api/room/yourroomname</div>
-    </div>
-
-    <div class="section">
-      <h2>Timer Modes</h2>
-
-      <h3>Countdown</h3>
-      <p>Counts down from a set duration. Configurable end behavior:</p>
-      <ul>
-        <li><strong>Stop at 00:00</strong> - Timer stops when it reaches zero</li>
-        <li><strong>Count into negative</strong> - Continues counting as -00:01, -00:02, etc.</li>
-        <li><strong>Hide timer</strong> - Timer disappears when it reaches zero</li>
-      </ul>
-
-      <h3>Count Up</h3>
-      <p>Counts up from zero. Great for tracking elapsed time.</p>
-    </div>
-
-    <div class="section">
-      <h2>Duration Format</h2>
-      <p>You can enter durations in various formats:</p>
-      <ul>
-        <li><span class="code">5:00</span> or <span class="code">5m</span> - 5 minutes</li>
-        <li><span class="code">1:30:00</span> or <span class="code">1h30m</span> - 1 hour 30 minutes</li>
-        <li><span class="code">90</span> or <span class="code">90s</span> - 90 seconds</li>
-        <li><span class="code">2:30</span> - 2 minutes 30 seconds</li>
-      </ul>
-    </div>
+    </section>
 
     <footer>
-      OBS Timer - Self-hosted timer overlay
+      <p>OBS Timer is free and open source. Add a browser source in OBS pointing to your overlay URL.</p>
     </footer>
-  </div>
+  </main>
 
   <script>
-    // Set dynamic URL examples
+    // Set dynamic URLs for SEO meta tags
     const baseUrl = window.location.origin;
-    document.getElementById('obs-url-example').textContent = `${baseUrl}/overlay?room=yourroomname`;
+    document.querySelector('link[rel="canonical"]').href = baseUrl + '/';
+    document.querySelector('meta[property="og:url"]').content = baseUrl + '/';
+    document.querySelector('meta[property="og:image"]').content = baseUrl + '/og-image.png';
+    document.querySelector('meta[name="twitter:image"]').content = baseUrl + '/og-image.png';
 
     // Check for error in URL
     const params = new URLSearchParams(window.location.search);
@@ -325,7 +339,6 @@
 
     // Handle quick start form
     const roomInput = document.getElementById('room-input');
-    const goBtn = document.getElementById('go-btn');
 
     function goToRoom() {
       const room = roomInput.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
@@ -335,13 +348,6 @@
         roomInput.focus();
       }
     }
-
-    goBtn.addEventListener('click', goToRoom);
-    roomInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        goToRoom();
-      }
-    });
   </script>
 </body>
 </html>

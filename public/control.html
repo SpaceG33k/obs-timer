@@ -6,8 +6,9 @@
   <title>OBS Timer Control Panel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;600;700&family=Open+Sans:wght@400;500;600;700&family=Lato:wght@400;700&family=Noto+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Nunito:wght@400;600;700&family=Roboto+Mono:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="/css/styles.css" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/favicon.png">
   <style>
     body {
       font-family: 'Inter', system-ui, sans-serif;
@@ -17,7 +18,7 @@
     }
 
     .preview-container {
-      background: #000;
+      background: #888888;
       border-radius: 12px;
       padding: 40px;
       display: flex;
@@ -254,40 +255,24 @@
       transform: translateX(22px);
     }
 
-    .status-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 500;
+    .btn-start.disabled {
+      background: rgba(34, 197, 94, 0.3);
+      cursor: not-allowed;
+      opacity: 0.6;
     }
 
-    .status-indicator.running {
-      background: rgba(34, 197, 94, 0.2);
-      color: #22c55e;
+    .btn-stop.disabled {
+      background: rgba(239, 68, 68, 0.3);
+      cursor: not-allowed;
+      opacity: 0.6;
     }
 
-    .status-indicator.stopped {
-      background: rgba(107, 114, 128, 0.2);
-      color: #9ca3af;
+    .btn-start.active {
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.4);
     }
 
-    .status-indicator .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: currentColor;
-    }
-
-    .status-indicator.running .dot {
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+    .btn-stop.active {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.4);
     }
 
     .copy-url {
@@ -343,6 +328,14 @@
     .gap-3 { gap: 12px; }
     .items-center { align-items: center; }
     .justify-between { justify-content: space-between; }
+
+    .preview-sticky {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #1a1a2e !important;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -353,14 +346,20 @@
         <h1 class="text-2xl font-bold">Timer Control</h1>
         <p class="text-gray-400 text-sm mt-1">Room: <span id="channel-name" class="text-blue-400">-</span></p>
       </div>
-      <div id="status" class="status-indicator stopped">
-        <span class="dot"></span>
-        <span class="status-text">Stopped</span>
-      </div>
     </div>
-
-    <!-- Preview -->
+    <!-- OBS URL -->
     <div class="control-section">
+      <h3>OBS Browser Source URL</h3>
+      <div class="copy-url">
+        <input type="text" id="obs-url" class="input-dark" readonly>
+        <button id="copy-url" type="button">Copy</button>
+      </div>
+      <p class="text-gray-500 text-sm mt-2">Add this URL as a Browser Source in OBS. Set width/height to what you prefer.
+        <br>The overlay has a transparent background. Position and resize the source to place the timer where you want it on screen.
+      </p>
+    </div>
+    <!-- Preview -->
+    <div class="control-section preview-sticky">
       <h3>Preview</h3>
       <div class="preview-container">
         <div id="timer-preview">00:00</div>
@@ -388,7 +387,7 @@
         <div>
           <label>Mode</label>
           <select id="mode" class="input-dark">
-            <option value="countdown">Countdown</option>
+            <option value="countdown">Count Down</option>
             <option value="countup">Count Up</option>
           </select>
         </div>
@@ -403,7 +402,7 @@
 
       <div class="grid-2">
         <div>
-          <label>End Behavior</label>
+          <label>Countdown End Behavior</label>
           <select id="end-behavior" class="input-dark">
             <option value="stop">Stop at 00:00</option>
             <option value="negative">Count into negative</option>
@@ -431,13 +430,24 @@
         <div>
           <label>Font Family</label>
           <select id="font-family" class="input-dark">
-            <option value="'Roboto Mono', monospace">Roboto Mono</option>
-            <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
-            <option value="'Fira Code', monospace">Fira Code</option>
-            <option value="'Source Code Pro', monospace">Source Code Pro</option>
-            <option value="'IBM Plex Mono', monospace">IBM Plex Mono</option>
-            <option value="'Courier New', monospace">Courier New</option>
-            <option value="monospace">System Monospace</option>
+            <optgroup label="Sans-Serif (tabular figures)">
+              <option value="'Inter', sans-serif">Inter</option>
+              <option value="'Roboto', sans-serif">Roboto</option>
+              <option value="'Open Sans', sans-serif">Open Sans</option>
+              <option value="'Lato', sans-serif">Lato</option>
+              <option value="'Noto Sans', sans-serif">Noto Sans</option>
+              <option value="'Poppins', sans-serif">Poppins</option>
+              <option value="'Nunito', sans-serif">Nunito</option>
+            </optgroup>
+            <optgroup label="Monospace">
+              <option value="'Roboto Mono', monospace">Roboto Mono</option>
+              <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+              <option value="'Fira Code', monospace">Fira Code</option>
+              <option value="'Source Code Pro', monospace">Source Code Pro</option>
+              <option value="'IBM Plex Mono', monospace">IBM Plex Mono</option>
+              <option value="'Courier New', monospace">Courier New</option>
+              <option value="monospace">System Monospace</option>
+            </optgroup>
           </select>
         </div>
         <div>
@@ -534,16 +544,6 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- OBS URL -->
-    <div class="control-section">
-      <h3>OBS Browser Source URL</h3>
-      <div class="copy-url">
-        <input type="text" id="obs-url" class="input-dark" readonly>
-        <button id="copy-url" type="button">Copy</button>
-      </div>
-      <p class="text-gray-500 text-sm mt-2">Add this URL as a Browser Source in OBS. Set width/height to match your canvas.</p>
     </div>
   </div>
 

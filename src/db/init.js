@@ -17,7 +17,7 @@ function initializeDatabase() {
         started_at INTEGER,
         end_behavior TEXT DEFAULT 'stop' CHECK(end_behavior IN ('stop', 'negative', 'hide', 'confetti')),
         format TEXT DEFAULT 'auto' CHECK(format IN ('auto', 'HH:MM:SS', 'MM:SS', 'SS')),
-        font_family TEXT DEFAULT '''Roboto Mono'', monospace',
+        font_family TEXT DEFAULT '''Inter'', sans-serif',
         font_size INTEGER DEFAULT 72,
         font_weight INTEGER DEFAULT 600,
         text_color TEXT DEFAULT '#FFFFFF',
@@ -65,7 +65,7 @@ function initializeDatabase() {
       format TEXT DEFAULT 'auto' CHECK(format IN ('auto', 'HH:MM:SS', 'MM:SS', 'SS')),
 
       -- Styling
-      font_family TEXT DEFAULT '''Roboto Mono'', monospace',
+      font_family TEXT DEFAULT '''Inter'', sans-serif',
       font_size INTEGER DEFAULT 72,
       font_weight INTEGER DEFAULT 600,
       text_color TEXT DEFAULT '#FFFFFF',
@@ -98,7 +98,7 @@ function initializeDatabase() {
       is_running = COALESCE(is_running, 0),
       end_behavior = COALESCE(end_behavior, 'stop'),
       format = COALESCE(format, 'auto'),
-      font_family = COALESCE(font_family, '''Roboto Mono'', monospace'),
+      font_family = COALESCE(font_family, '''Inter'', sans-serif'),
       font_size = COALESCE(font_size, 72),
       font_weight = COALESCE(font_weight, 600),
       text_color = COALESCE(text_color, '#FFFFFF'),

@@ -8,7 +8,7 @@ const defaultRoom = {
   started_at: null,
   end_behavior: 'stop',
   format: 'auto',
-  font_family: "'Roboto Mono', monospace",
+  font_family: "'Inter', sans-serif",
   font_size: 72,
   font_weight: 600,
   text_color: '#FFFFFF',

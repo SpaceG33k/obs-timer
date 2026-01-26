@@ -98,6 +98,7 @@ function applyTimerStyles(element, state) {
   element.style.fontFamily = state.font_family;
   element.style.fontSize = state.font_size + 'px';
   element.style.fontWeight = state.font_weight;
+  element.style.fontVariantNumeric = 'tabular-nums';
   element.style.color = state.text_color;
 
   // Shadow
