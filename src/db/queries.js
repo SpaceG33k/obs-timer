@@ -50,18 +50,12 @@ function getRoom(channel) {
 }
 
 function getOrCreateRoom(channel) {
-  let room = getRoom(channel);
-
-  if (!room) {
-    const now = Date.now();
-    db.prepare(`
-      INSERT INTO rooms (channel, created_at, updated_at)
-      VALUES (?, ?, ?)
-    `).run(channel, now, now);
-    room = getRoom(channel);
-  }
-
-  return room;
+  const now = Date.now();
+  db.prepare(`
+    INSERT OR IGNORE INTO rooms (channel, created_at, updated_at)
+    VALUES (?, ?, ?)
+  `).run(channel, now, now);
+  return getRoom(channel);
 }
 
 function updateRoom(channel, updates) {
