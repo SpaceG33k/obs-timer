@@ -41,6 +41,8 @@ function initializeDatabase() {
       ALTER TABLE rooms_new RENAME TO rooms;
 
       CREATE INDEX IF NOT EXISTS idx_rooms_channel ON rooms(channel);
+      CREATE INDEX IF NOT EXISTS idx_rooms_is_running ON rooms(is_running);
+      CREATE INDEX IF NOT EXISTS idx_rooms_created_at ON rooms(created_at);
     `);
     console.log('Database migrated');
     return;
@@ -81,6 +83,8 @@ function initializeDatabase() {
     );
 
     CREATE INDEX IF NOT EXISTS idx_rooms_channel ON rooms(channel);
+    CREATE INDEX IF NOT EXISTS idx_rooms_is_running ON rooms(is_running);
+    CREATE INDEX IF NOT EXISTS idx_rooms_created_at ON rooms(created_at);
   `);
 
   // Ensure any NULL values get defaults (for rooms created before all columns existed)

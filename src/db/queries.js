@@ -22,6 +22,29 @@ const defaultRoom = {
   stroke_width: 2
 };
 
+// Field validators - return sanitized value or null if invalid
+const fieldValidators = {
+  mode: (v) => ['countdown', 'countup'].includes(v) ? v : null,
+  duration_ms: (v) => typeof v === 'number' && v >= 0 && v <= 86400000 ? Math.floor(v) : null,
+  remaining_ms: (v) => typeof v === 'number' && v >= -86400000 && v <= 86400000 ? Math.floor(v) : null,
+  is_running: (v) => [0, 1].includes(v) ? v : null,
+  started_at: (v) => v === null || (typeof v === 'number' && v > 0) ? v : null,
+  end_behavior: (v) => ['stop', 'negative', 'hide', 'confetti'].includes(v) ? v : null,
+  format: (v) => ['auto', 'HH:MM:SS', 'MM:SS', 'SS'].includes(v) ? v : null,
+  font_family: (v) => typeof v === 'string' && v.length > 0 && v.length <= 200 ? v : null,
+  font_size: (v) => typeof v === 'number' && v >= 8 && v <= 500 ? Math.floor(v) : null,
+  font_weight: (v) => typeof v === 'number' && v >= 100 && v <= 900 ? Math.floor(v) : null,
+  text_color: (v) => typeof v === 'string' && v.length > 0 && v.length <= 50 ? v : null,
+  shadow_enabled: (v) => [0, 1].includes(v) ? v : null,
+  shadow_color: (v) => typeof v === 'string' && v.length > 0 && v.length <= 50 ? v : null,
+  shadow_blur: (v) => typeof v === 'number' && v >= 0 && v <= 100 ? Math.floor(v) : null,
+  shadow_offset_x: (v) => typeof v === 'number' && v >= -50 && v <= 50 ? Math.floor(v) : null,
+  shadow_offset_y: (v) => typeof v === 'number' && v >= -50 && v <= 50 ? Math.floor(v) : null,
+  stroke_enabled: (v) => [0, 1].includes(v) ? v : null,
+  stroke_color: (v) => typeof v === 'string' && v.length > 0 && v.length <= 50 ? v : null,
+  stroke_width: (v) => typeof v === 'number' && v >= 0 && v <= 20 ? Math.floor(v) : null
+};
+
 function getRoom(channel) {
   return db.prepare('SELECT * FROM rooms WHERE channel = ?').get(channel);
 }
@@ -44,17 +67,15 @@ function getOrCreateRoom(channel) {
 function updateRoom(channel, updates) {
   const room = getOrCreateRoom(channel);
 
-  const allowedFields = [
-    'mode', 'duration_ms', 'remaining_ms', 'is_running', 'started_at', 'end_behavior',
-    'format', 'font_family', 'font_size', 'font_weight', 'text_color',
-    'shadow_enabled', 'shadow_color', 'shadow_blur', 'shadow_offset_x', 'shadow_offset_y',
-    'stroke_enabled', 'stroke_color', 'stroke_width'
-  ];
-
   const filteredUpdates = {};
-  for (const key of allowedFields) {
+  for (const key of Object.keys(fieldValidators)) {
     if (updates[key] !== undefined) {
-      filteredUpdates[key] = updates[key];
+      const validator = fieldValidators[key];
+      const validated = validator(updates[key]);
+      if (validated !== null) {
+        filteredUpdates[key] = validated;
+      }
+      // Skip invalid values silently - could log in debug mode if needed
     }
   }
 

@@ -50,6 +50,12 @@
 
   const copyUrlBtn = document.getElementById('copy-url');
 
+  // Cache slider display span elements to avoid fragile querySelector chains
+  const shadowBlurDisplay = shadowBlurSlider.closest('.range-with-value')?.querySelector('span');
+  const shadowOffsetXDisplay = shadowOffsetXSlider.closest('.range-with-value')?.querySelector('span');
+  const shadowOffsetYDisplay = shadowOffsetYSlider.closest('.range-with-value')?.querySelector('span');
+  const strokeWidthDisplay = strokeWidthSlider.closest('.range-with-value')?.querySelector('span');
+
   // Set room name and OBS URL
   channelName.textContent = room;
   const baseUrl = window.location.origin;
@@ -121,10 +127,10 @@
   // Update slider display values
   function updateSliderDisplays() {
     fontSizeDisplay.textContent = fontSizeSlider.value + 'px';
-    document.querySelector('#shadow-blur + .range-with-value span, [id="shadow-blur"]').closest('.range-with-value').querySelector('span').textContent = shadowBlurSlider.value + 'px';
-    document.querySelector('#shadow-offset-x').closest('.range-with-value').querySelector('span').textContent = shadowOffsetXSlider.value + 'px';
-    document.querySelector('#shadow-offset-y').closest('.range-with-value').querySelector('span').textContent = shadowOffsetYSlider.value + 'px';
-    document.querySelector('#stroke-width').closest('.range-with-value').querySelector('span').textContent = strokeWidthSlider.value + 'px';
+    if (shadowBlurDisplay) shadowBlurDisplay.textContent = shadowBlurSlider.value + 'px';
+    if (shadowOffsetXDisplay) shadowOffsetXDisplay.textContent = shadowOffsetXSlider.value + 'px';
+    if (shadowOffsetYDisplay) shadowOffsetYDisplay.textContent = shadowOffsetYSlider.value + 'px';
+    if (strokeWidthDisplay) strokeWidthDisplay.textContent = strokeWidthSlider.value + 'px';
   }
 
   // Create connection
@@ -263,7 +269,7 @@
   });
 
   shadowBlurSlider.addEventListener('input', () => {
-    shadowBlurSlider.closest('.range-with-value').querySelector('span').textContent = shadowBlurSlider.value + 'px';
+    if (shadowBlurDisplay) shadowBlurDisplay.textContent = shadowBlurSlider.value + 'px';
   });
 
   shadowBlurSlider.addEventListener('change', () => {
@@ -271,7 +277,7 @@
   });
 
   shadowOffsetXSlider.addEventListener('input', () => {
-    shadowOffsetXSlider.closest('.range-with-value').querySelector('span').textContent = shadowOffsetXSlider.value + 'px';
+    if (shadowOffsetXDisplay) shadowOffsetXDisplay.textContent = shadowOffsetXSlider.value + 'px';
   });
 
   shadowOffsetXSlider.addEventListener('change', () => {
@@ -279,7 +285,7 @@
   });
 
   shadowOffsetYSlider.addEventListener('input', () => {
-    shadowOffsetYSlider.closest('.range-with-value').querySelector('span').textContent = shadowOffsetYSlider.value + 'px';
+    if (shadowOffsetYDisplay) shadowOffsetYDisplay.textContent = shadowOffsetYSlider.value + 'px';
   });
 
   shadowOffsetYSlider.addEventListener('change', () => {
@@ -305,7 +311,7 @@
   });
 
   strokeWidthSlider.addEventListener('input', () => {
-    strokeWidthSlider.closest('.range-with-value').querySelector('span').textContent = strokeWidthSlider.value + 'px';
+    if (strokeWidthDisplay) strokeWidthDisplay.textContent = strokeWidthSlider.value + 'px';
   });
 
   strokeWidthSlider.addEventListener('change', () => {

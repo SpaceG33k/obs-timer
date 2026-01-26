@@ -76,10 +76,10 @@ function parseDuration(input) {
     return (hours * 3600 + minutes * 60 + seconds) * 1000;
   }
 
-  // Plain number - assume milliseconds if > 1000, seconds otherwise
+  // Plain number - always treat as seconds for consistency with frontend
   const num = parseInt(str);
   if (!isNaN(num)) {
-    return num >= 1000 ? num : num * 1000;
+    return num * 1000;
   }
 
   return 0;

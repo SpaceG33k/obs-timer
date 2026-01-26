@@ -1,6 +1,9 @@
 const { getOrCreateRoom, updateRoom } = require('../db/queries');
 const { formatTime } = require('./timerUtils');
 
+// Maximum negative duration before auto-stopping (24 hours in ms)
+const MAX_NEGATIVE_DURATION_MS = 24 * 60 * 60 * 1000;
+
 class TimerManager {
   constructor(io) {
     this.io = io;
@@ -225,7 +228,15 @@ class TimerManager {
         break;
 
       case 'negative':
-        // Keep running into negative
+        // Keep running into negative, but stop after max duration to prevent memory leak
+        if (state.remaining_ms < -MAX_NEGATIVE_DURATION_MS) {
+          updateRoom(channel, {
+            is_running: 0,
+            remaining_ms: state.remaining_ms,
+            started_at: null
+          });
+          this.stopSync(channel);
+        }
         break;
 
       case 'hide':
@@ -261,13 +272,32 @@ class TimerManager {
 
           // Check if timer should have ended
           if (remaining_ms <= 0) {
-            if (room.end_behavior === 'stop' || room.end_behavior === 'hide') {
-              updateRoom(room.channel, {
-                is_running: 0,
-                remaining_ms: room.end_behavior === 'negative' ? remaining_ms : 0,
-                started_at: null
-              });
-              continue;
+            switch (room.end_behavior) {
+              case 'stop':
+              case 'hide':
+              case 'confetti':
+                // Timer ended while server was down - mark as stopped
+                updateRoom(room.channel, {
+                  is_running: 0,
+                  remaining_ms: 0,
+                  started_at: null
+                });
+                console.log(`Timer for channel ${room.channel} ended while server was down`);
+                continue;
+
+              case 'negative':
+                // Check if exceeded max negative duration
+                if (remaining_ms < -MAX_NEGATIVE_DURATION_MS) {
+                  updateRoom(room.channel, {
+                    is_running: 0,
+                    remaining_ms: remaining_ms,
+                    started_at: null
+                  });
+                  console.log(`Timer for channel ${room.channel} exceeded max negative duration`);
+                  continue;
+                }
+                // Otherwise, continue running in negative
+                break;
             }
           }
         } else {
