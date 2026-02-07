@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="google-site-verification" content="U4NfOrsNRwkv3me1C9Ut53XnHwU9k5as616WESXKLaU" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OBS Timer - Free Countdown & Countup Overlay for OBS Studio</title>
+  <meta name="description" content="Free, self-hosted countdown and countup timer overlay for OBS Studio. Features real-time sync, customizable styling, multiple timers, and persistent state. Perfect for streams and broadcasts.">
+  <meta name="keywords" content="OBS timer, OBS overlay, countdown timer, countup timer, streaming timer, OBS Studio, browser source, live streaming">
+  <meta name="author" content="OBS Timer">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="OBS Timer - Free Countdown & Countup Overlay for OBS Studio">
+  <meta property="og:description" content="Free, countdown and countup timer overlay for OBS Studio. Real-time sync, customizable styling, and multiple timers.">
+  <meta property="og:image" content="/og-image.png">
+  <meta property="og:url" content="">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="OBS Timer - Free Countdown & Countup Overlay for OBS Studio">
+  <meta name="twitter:description" content="Free, countdown and countup timer overlay for OBS Studio. Real-time sync, customizable styling, and multiple timers.">
+  <meta name="twitter:image" content="/og-image.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "OBS Timer",
+    "description": "Free, countdown and countup timer overlay for OBS Studio with real-time sync and customizable styling.",
+    "applicationCategory": "Multimedia",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "Countdown timer",
+      "Countup timer",
+      "Real-time sync",
+      "Customizable styling",
+      "Multiple timers",
+      "Persistent state",
+      "OBS browser source compatible"
+    ]
+  }
+  </script>
+
+  <link href="/fonts/fonts.css" rel="stylesheet">
+  <link href="/css/styles.css" rel="stylesheet">
+</head>
+<body>
+  <main class="page-container">
+    <header class="hero">
+      <h1>OBS Timer</h1>
+      <p>Free countdown and countup timer overlay for OBS Studio</p>
+    </header>
+
+    <div id="error-banner" class="error-banner"></div>
+
+    <section class="quick-start" aria-labelledby="quickstart-heading">
+      <div class="quick-start-header">
+        <h2 id="quickstart-heading">Timers</h2>
+        <button class="create-btn" onclick="createTimer()">
+          <span>+</span> New Timer
+        </button>
+      </div>
+      <div id="timers-list" class="timers-list">
+        <!-- Timers rendered by JavaScript -->
+      </div>
+    </section>
+
+    <div id="copy-feedback" class="copy-feedback">Overlay URL copied!</div>
+
+    <section class="section demo-section" aria-labelledby="demo-heading">
+      <h2 id="demo-heading">See What's Possible</h2>
+
+      <!-- Preview -->
+      <div class="demo-preview-container">
+        <div id="demo-timer">12:34</div>
+      </div>
+
+      <!-- Presets -->
+      <div class="preset-gallery" role="group" aria-label="Style presets">
+        <button class="preset-card active" data-preset="default">
+          <span class="preset-preview" style="font-family: 'Roboto Mono', monospace; color: #fff; text-shadow: 1px 1px 2px #000;">12:34</span>
+          <span class="preset-name">Default</span>
+        </button>
+        <button class="preset-card" data-preset="clean">
+          <span class="preset-preview" style="font-family: 'Inter', sans-serif; font-weight: 500; color: #fff;">12:34</span>
+          <span class="preset-name">Clean</span>
+        </button>
+        <button class="preset-card" data-preset="streamer">
+          <span class="preset-preview" style="font-family: 'Poppins', sans-serif; font-weight: 900; color: #22c55e; text-shadow: 1px 1px 3px #000;">12:34</span>
+          <span class="preset-name">Streamer</span>
+        </button>
+        <button class="preset-card" data-preset="terminal">
+          <span class="preset-preview" style="font-family: 'JetBrains Mono', monospace; color: #f59e0b; text-shadow: 0 0 6px #22c55e;">12:34</span>
+          <span class="preset-name">Terminal</span>
+        </button>
+        <button class="preset-card" data-preset="highcontrast">
+          <span class="preset-preview" style="font-family: 'Roboto Mono', monospace; font-weight: 700; color: #fff; -webkit-text-stroke: 1.5px #000;">12:34</span>
+          <span class="preset-name">High Contrast</span>
+        </button>
+      </div>
+
+      <!-- Controls -->
+      <div class="demo-controls">
+        <!-- Font Family -->
+        <div class="demo-control-group">
+          <label for="demo-font-family">Font Family</label>
+          <select id="demo-font-family">
+            <optgroup label="Sans Serif">
+              <option value="Inter">Inter</option>
+              <option value="Roboto">Roboto</option>
+              <option value="Open Sans">Open Sans</option>
+              <option value="Lato">Lato</option>
+              <option value="Noto Sans">Noto Sans</option>
+              <option value="Poppins">Poppins</option>
+              <option value="Nunito">Nunito</option>
+            </optgroup>
+            <optgroup label="Monospace">
+              <option value="Roboto Mono" selected>Roboto Mono</option>
+              <option value="JetBrains Mono">JetBrains Mono</option>
+              <option value="Fira Code">Fira Code</option>
+              <option value="Source Code Pro">Source Code Pro</option>
+              <option value="IBM Plex Mono">IBM Plex Mono</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- Font Weight -->
+        <div class="demo-control-group">
+          <label for="demo-font-weight">Font Weight</label>
+          <select id="demo-font-weight">
+            <option value="400">Regular (400)</option>
+            <option value="500">Medium (500)</option>
+            <option value="600" selected>Semi-Bold (600)</option>
+            <option value="700">Bold (700)</option>
+            <option value="900">Black (900)</option>
+          </select>
+        </div>
+
+        <!-- Font Size -->
+        <div class="demo-control-group">
+          <label for="demo-font-size">Font Size</label>
+          <div class="demo-control-row">
+            <input type="range" id="demo-font-size" min="24" max="200" value="72">
+            <span class="range-value" id="demo-font-size-value">72px</span>
+          </div>
+        </div>
+
+        <!-- Text Color -->
+        <div class="demo-control-group">
+          <label for="demo-text-color">Text Color</label>
+          <div class="color-input-wrapper">
+            <input type="color" id="demo-text-color" value="#ffffff">
+            <input type="text" id="demo-text-color-hex" value="#ffffff" maxlength="7">
+          </div>
+        </div>
+
+        <!-- Shadow -->
+        <div class="demo-control-group demo-toggle-group">
+          <div class="demo-toggle-header">
+            <label>Shadow</label>
+            <div class="demo-toggle active" id="demo-shadow-toggle" role="switch" aria-checked="true" tabindex="0"></div>
+          </div>
+          <div class="demo-toggle-controls visible" id="demo-shadow-controls">
+            <div class="color-input-wrapper">
+              <input type="color" id="demo-shadow-color" value="#000000">
+              <input type="text" id="demo-shadow-color-hex" value="#000000" maxlength="7">
+            </div>
+            <div class="demo-control-row">
+              <label style="font-size: 12px; min-width: 30px;">Blur</label>
+              <input type="range" id="demo-shadow-blur" min="0" max="20" value="4">
+              <span class="range-value" id="demo-shadow-blur-value">4px</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stroke -->
+        <div class="demo-control-group demo-toggle-group">
+          <div class="demo-toggle-header">
+            <label>Stroke</label>
+            <div class="demo-toggle active" id="demo-stroke-toggle" role="switch" aria-checked="true" tabindex="0"></div>
+          </div>
+          <div class="demo-toggle-controls visible" id="demo-stroke-controls">
+            <div class="color-input-wrapper">
+              <input type="color" id="demo-stroke-color" value="#000000">
+              <input type="text" id="demo-stroke-color-hex" value="#000000" maxlength="7">
+            </div>
+            <div class="demo-control-row">
+              <label style="font-size: 12px; min-width: 30px;">Width</label>
+              <input type="range" id="demo-stroke-width" min="0" max="5" step="0.5" value="1">
+              <span class="range-value" id="demo-stroke-width-value">1px</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="features-heading">
+      <h2 id="features-heading">How It Works</h2>
+      <div class="features">
+        <article class="feature">
+          <h3>Count Down</h3>
+          <p>Count down from a set duration. Choose what happens at zero.</p>
+        </article>
+        <article class="feature">
+          <h3>Count Up</h3>
+          <p>Count up from zero. Great for tracking elapsed time with no end limit.</p>
+        </article>
+        <article class="feature">
+          <h3>Customizable</h3>
+          <p>Adjust font, size, colors, shadows, and more from the control panel.</p>
+        </article>
+        <article class="feature">
+          <h3>Real-Time Sync</h3>
+          <p>Control panel and OBS overlay updates instantly.</p>
+        </article>
+        <article class="feature">
+          <h3>Start / Pause / Stop</h3>
+          <p>Start, Pause/Resume or Stop the timer when you need to.</p>
+        </article>
+        <article class="feature">
+          <h3>OBS Ready</h3>
+          <p>Transparent background overlay designed for OBS.</p>
+        </article>
+      </div>
+    </section>
+
+    <footer>
+    <a href="https://github.com/SpaceG33k/obs-timer" target="_blank" rel="noopener noreferrer" aria-label="View on GitHub" class="github-link">
+      <svg width="24" height="24" viewBox="0 0 98 96" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z" fill="currentColor"/>
+      </svg>
+    </a>
+    </footer>
+  </main>
+
+  <script>
+    // Set dynamic URLs for SEO meta tags
+    const baseUrl = window.location.origin;
+    document.querySelector('link[rel="canonical"]').href = baseUrl + '/';
+    document.querySelector('meta[property="og:url"]').content = baseUrl + '/';
+    document.querySelector('meta[property="og:image"]').content = baseUrl + '/og-image.png';
+    document.querySelector('meta[name="twitter:image"]').content = baseUrl + '/og-image.png';
+
+    // Check for error in URL
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get('error');
+    if (error === 'missing_timer') {
+      const banner = document.getElementById('error-banner');
+      banner.textContent = 'Please enter a timer name to access the control panel or overlay.';
+      banner.classList.add('show');
+    }
+
+    const STORAGE_KEY = 'obs-timers';
+
+    // Generate a random timer name via server API
+    async function generateTimerName() {
+      try {
+        const response = await fetch('/api/generate-name');
+        const data = await response.json();
+        return data.name;
+      } catch (error) {
+        // Fallback to random string if API fails
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        const array = new Uint32Array(12);
+        crypto.getRandomValues(array);
+        for (let i = 0; i < 12; i++) {
+          result += chars[array[i] % chars.length];
+        }
+        return result;
+      }
+    }
+
+    // Get saved timers from localStorage
+    function getSavedTimers() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        return data ? JSON.parse(data) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    // Save a timer to localStorage
+    function saveTimer(name) {
+      const timers = getSavedTimers();
+      if (!timers.some(r => r.name === name)) {
+        timers.unshift({ name, createdAt: Date.now() });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(timers));
+      }
+    }
+
+    // Delete a timer from localStorage
+    function deleteTimer(name) {
+      const timers = getSavedTimers().filter(r => r.name !== name);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(timers));
+      renderTimers();
+    }
+
+    // Create a new timer and navigate to control panel
+    async function createTimer() {
+      const name = await generateTimerName();
+      saveTimer(name);
+      window.location.href = `/control?timer=${name}`;
+    }
+
+    // Copy overlay URL to clipboard
+    function copyOverlayUrl(name) {
+      const url = `${baseUrl}/overlay?timer=${name}`;
+      navigator.clipboard.writeText(url).then(() => {
+        const feedback = document.getElementById('copy-feedback');
+        feedback.classList.add('show');
+        setTimeout(() => feedback.classList.remove('show'), 2000);
+      });
+    }
+
+    // Render the timers list using safe DOM methods
+    function renderTimers() {
+      const container = document.getElementById('timers-list');
+      const timers = getSavedTimers();
+
+      // Clear container using safe method
+      container.replaceChildren();
+
+      if (timers.length === 0) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-state';
+        emptyState.textContent = 'No timers yet. Click "+ New Timer" to create one.';
+        container.appendChild(emptyState);
+        return;
+      }
+
+      timers.forEach(timer => {
+        const card = document.createElement('div');
+        card.className = 'timer-card';
+
+        // Timer name
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'timer-name';
+        nameSpan.textContent = timer.name;
+
+        // Action buttons container
+        const actions = document.createElement('div');
+        actions.className = 'timer-actions';
+
+        const controlBtn = document.createElement('button');
+        controlBtn.className = 'timer-btn timer-btn-primary';
+        controlBtn.textContent = 'Control';
+        controlBtn.addEventListener('click', () => {
+          window.location.href = `/control?timer=${timer.name}`;
+        });
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'timer-btn';
+        copyBtn.textContent = 'Copy URL';
+        copyBtn.addEventListener('click', () => copyOverlayUrl(timer.name));
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'timer-delete';
+        deleteBtn.textContent = '×';
+        deleteBtn.title = 'Remove timer';
+        deleteBtn.addEventListener('click', () => deleteTimer(timer.name));
+
+        actions.appendChild(controlBtn);
+        actions.appendChild(copyBtn);
+        actions.appendChild(deleteBtn);
+
+        card.appendChild(nameSpan);
+        card.appendChild(actions);
+        container.appendChild(card);
+      });
+    }
+
+    // Initial render
+    renderTimers();
+
+    // ==================== Demo Section ====================
+
+    // Demo state
+    const demoState = {
+      fontFamily: 'Roboto Mono',
+      fontWeight: '600',
+      fontSize: 72,
+      textColor: '#ffffff',
+      shadowEnabled: true,
+      shadowColor: '#000000',
+      shadowBlur: 4,
+      strokeEnabled: true,
+      strokeColor: '#000000',
+      strokeWidth: 1
+    };
+
+    // Presets configuration
+    const presets = {
+      default: {
+        fontFamily: 'Roboto Mono',
+        fontWeight: '600',
+        fontSize: 72,
+        textColor: '#ffffff',
+        shadowEnabled: true,
+        shadowColor: '#000000',
+        shadowBlur: 4,
+        strokeEnabled: true,
+        strokeColor: '#000000',
+        strokeWidth: 1
+      },
+      clean: {
+        fontFamily: 'Inter',
+        fontWeight: '500',
+        fontSize: 72,
+        textColor: '#ffffff',
+        shadowEnabled: false,
+        shadowColor: '#000000',
+        shadowBlur: 4,
+        strokeEnabled: false,
+        strokeColor: '#000000',
+        strokeWidth: 1
+      },
+      streamer: {
+        fontFamily: 'Poppins',
+        fontWeight: '900',
+        fontSize: 72,
+        textColor: '#22c55e',
+        shadowEnabled: true,
+        shadowColor: '#000000',
+        shadowBlur: 8,
+        strokeEnabled: false,
+        strokeColor: '#000000',
+        strokeWidth: 1
+      },
+      terminal: {
+        fontFamily: 'JetBrains Mono',
+        fontWeight: '600',
+        fontSize: 72,
+        textColor: '#f59e0b',
+        shadowEnabled: true,
+        shadowColor: '#22c55e',
+        shadowBlur: 10,
+        strokeEnabled: false,
+        strokeColor: '#000000',
+        strokeWidth: 1
+      },
+      highcontrast: {
+        fontFamily: 'Roboto Mono',
+        fontWeight: '700',
+        fontSize: 72,
+        textColor: '#ffffff',
+        shadowEnabled: false,
+        shadowColor: '#000000',
+        shadowBlur: 4,
+        strokeEnabled: true,
+        strokeColor: '#000000',
+        strokeWidth: 3
+      }
+    };
+
+    // DOM elements
+    const demoTimer = document.getElementById('demo-timer');
+    const fontFamilySelect = document.getElementById('demo-font-family');
+    const fontWeightSelect = document.getElementById('demo-font-weight');
+    const fontSizeSlider = document.getElementById('demo-font-size');
+    const fontSizeValue = document.getElementById('demo-font-size-value');
+    const textColorPicker = document.getElementById('demo-text-color');
+    const textColorHex = document.getElementById('demo-text-color-hex');
+    const shadowToggle = document.getElementById('demo-shadow-toggle');
+    const shadowControls = document.getElementById('demo-shadow-controls');
+    const shadowColorPicker = document.getElementById('demo-shadow-color');
+    const shadowColorHex = document.getElementById('demo-shadow-color-hex');
+    const shadowBlurSlider = document.getElementById('demo-shadow-blur');
+    const shadowBlurValue = document.getElementById('demo-shadow-blur-value');
+    const strokeToggle = document.getElementById('demo-stroke-toggle');
+    const strokeControls = document.getElementById('demo-stroke-controls');
+    const strokeColorPicker = document.getElementById('demo-stroke-color');
+    const strokeColorHex = document.getElementById('demo-stroke-color-hex');
+    const strokeWidthSlider = document.getElementById('demo-stroke-width');
+    const strokeWidthValue = document.getElementById('demo-stroke-width-value');
+    const presetCards = document.querySelectorAll('.preset-card');
+
+    // Apply styles to demo timer
+    function applyDemoStyles() {
+      const el = demoTimer;
+      const s = demoState;
+
+      el.style.fontFamily = `'${s.fontFamily}', ${s.fontFamily.includes('Mono') || s.fontFamily.includes('Code') ? 'monospace' : 'sans-serif'}`;
+      el.style.fontWeight = s.fontWeight;
+      el.style.fontSize = s.fontSize + 'px';
+      el.style.color = s.textColor;
+
+      // Shadow
+      if (s.shadowEnabled) {
+        el.style.textShadow = `2px 2px ${s.shadowBlur}px ${s.shadowColor}`;
+      } else {
+        el.style.textShadow = 'none';
+      }
+
+      // Stroke
+      if (s.strokeEnabled) {
+        el.style.webkitTextStroke = `${s.strokeWidth}px ${s.strokeColor}`;
+        el.style.paintOrder = 'stroke fill';
+      } else {
+        el.style.webkitTextStroke = 'none';
+      }
+    }
+
+    // Update controls to reflect state
+    function updateControlsFromState() {
+      fontFamilySelect.value = demoState.fontFamily;
+      fontWeightSelect.value = demoState.fontWeight;
+      fontSizeSlider.value = demoState.fontSize;
+      fontSizeValue.textContent = demoState.fontSize + 'px';
+      textColorPicker.value = demoState.textColor;
+      textColorHex.value = demoState.textColor;
+
+      // Shadow toggle
+      if (demoState.shadowEnabled) {
+        shadowToggle.classList.add('active');
+        shadowToggle.setAttribute('aria-checked', 'true');
+        shadowControls.classList.add('visible');
+      } else {
+        shadowToggle.classList.remove('active');
+        shadowToggle.setAttribute('aria-checked', 'false');
+        shadowControls.classList.remove('visible');
+      }
+      shadowColorPicker.value = demoState.shadowColor;
+      shadowColorHex.value = demoState.shadowColor;
+      shadowBlurSlider.value = demoState.shadowBlur;
+      shadowBlurValue.textContent = demoState.shadowBlur + 'px';
+
+      // Stroke toggle
+      if (demoState.strokeEnabled) {
+        strokeToggle.classList.add('active');
+        strokeToggle.setAttribute('aria-checked', 'true');
+        strokeControls.classList.add('visible');
+      } else {
+        strokeToggle.classList.remove('active');
+        strokeToggle.setAttribute('aria-checked', 'false');
+        strokeControls.classList.remove('visible');
+      }
+      strokeColorPicker.value = demoState.strokeColor;
+      strokeColorHex.value = demoState.strokeColor;
+      strokeWidthSlider.value = demoState.strokeWidth;
+      strokeWidthValue.textContent = demoState.strokeWidth + 'px';
+    }
+
+    // Apply preset
+    function applyPreset(name) {
+      const preset = presets[name];
+      if (!preset) return;
+
+      Object.assign(demoState, preset);
+      updateControlsFromState();
+      applyDemoStyles();
+
+      // Update active preset card
+      presetCards.forEach(card => {
+        card.classList.toggle('active', card.dataset.preset === name);
+      });
+    }
+
+    // Clear active preset (when user manually changes settings)
+    function clearActivePreset() {
+      presetCards.forEach(card => card.classList.remove('active'));
+    }
+
+    // Event listeners for presets
+    presetCards.forEach(card => {
+      card.addEventListener('click', () => applyPreset(card.dataset.preset));
+    });
+
+    // Event listeners for controls
+    fontFamilySelect.addEventListener('change', () => {
+      demoState.fontFamily = fontFamilySelect.value;
+      clearActivePreset();
+      applyDemoStyles();
+    });
+
+    fontWeightSelect.addEventListener('change', () => {
+      demoState.fontWeight = fontWeightSelect.value;
+      clearActivePreset();
+      applyDemoStyles();
+    });
+
+    fontSizeSlider.addEventListener('input', () => {
+      demoState.fontSize = parseInt(fontSizeSlider.value);
+      fontSizeValue.textContent = demoState.fontSize + 'px';
+      clearActivePreset();
+      applyDemoStyles();
+    });
+
+    textColorPicker.addEventListener('input', () => {
+      demoState.textColor = textColorPicker.value;
+      textColorHex.value = textColorPicker.value;
+      clearActivePreset();
+      applyDemoStyles();
+    });
+
+    textColorHex.addEventListener('input', () => {
+      const val = textColorHex.value;
+      if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+        demoState.textColor = val;
+        textColorPicker.value = val;
+        clearActivePreset();
+        applyDemoStyles();
+      }
+    });
+
+    // Shadow toggle
+    shadowToggle.addEventListener('click', () => {
+      demoState.shadowEnabled = !demoState.shadowEnabled;
+      shadowToggle.classList.toggle('active', demoState.shadowEnabled);
+      shadowToggle.setAttribute('aria-checked', demoState.shadowEnabled);
+      shadowControls.classList.toggle('visible', demoState.shadowEnabled);
+      clearActivePreset();
+      applyDemoStyles();
+    });
+
+    shadowToggle.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        shadowToggle.click();
+      }
+    });
+
+    shadowColorPicker.addEventListener('input', () => {
+      demoState.shadowColor = shadowColorPicker.value;
+      shadowColorHex.value = shadowColorPicker.value;
+      clearActivePreset();
+      applyDemoStyles();
+    });
+
+    shadowColorHex.addEventListener('input', () => {
+      const val = shadowColorHex.value;
+      if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+        demoState.shadowColor = val;
+        shadowColorPicker.value = val;
+        clearActivePreset();
+        applyDemoStyles();
+      }
+    });
+
+    shadowBlurSlider.addEventListener('input', () => {
+      demoState.shadowBlur = parseInt(shadowBlurSlider.value);
+      shadowBlurValue.textContent = demoState.shadowBlur + 'px';
+      clearActivePreset();
+      applyDemoStyles();
+    });
+
+    // Stroke toggle
+    strokeToggle.addEventListener('click', () => {
+      demoState.strokeEnabled = !demoState.strokeEnabled;
+      strokeToggle.classList.toggle('active', demoState.strokeEnabled);
+      strokeToggle.setAttribute('aria-checked', demoState.strokeEnabled);
+      strokeControls.classList.toggle('visible', demoState.strokeEnabled);
+      clearActivePreset();
+      applyDemoStyles();
+    });
+
+    strokeToggle.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        strokeToggle.click();
+      }
+    });
+
+    strokeColorPicker.addEventListener('input', () => {
+      demoState.strokeColor = strokeColorPicker.value;
+      strokeColorHex.value = strokeColorPicker.value;
+      clearActivePreset();
+      applyDemoStyles();
+    });
+
+    strokeColorHex.addEventListener('input', () => {
+      const val = strokeColorHex.value;
+      if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+        demoState.strokeColor = val;
+        strokeColorPicker.value = val;
+        clearActivePreset();
+        applyDemoStyles();
+      }
+    });
+
+    strokeWidthSlider.addEventListener('input', () => {
+      demoState.strokeWidth = parseFloat(strokeWidthSlider.value);
+      strokeWidthValue.textContent = demoState.strokeWidth + 'px';
+      clearActivePreset();
+      applyDemoStyles();
+    });
+
+    // Initial demo render
+    applyDemoStyles();
+  </script>
+</body>
+</html>

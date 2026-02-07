@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OBS Timer Control Panel</title>
+  <link href="/fonts/fonts.css" rel="stylesheet">
+  <link href="/css/styles.css" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/favicon.png">
+</head>
+<body>
+  <div class="max-w-4xl mx-auto p-6 flex flex-col gap-2">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold">Timer Control</h1>
+        <p class="text-gray-400 text-sm mt-1">Timer: <span id="channel-name" class="text-blue-400">-</span></p>
+      </div>
+      <a href="/" class="btn-control btn-reset">← Home</a>
+    </div>
+    <!-- OBS URL -->
+    <div class="control-section">
+      <h3>OBS Browser Source URL</h3>
+      <div class="copy-url">
+        <input type="text" id="obs-url" class="input-dark" readonly>
+        <button id="copy-url" type="button">Copy</button>
+      </div>
+      <p class="text-gray-500 text-sm mt-2">Add this URL as a Browser Source in OBS. Set width/height to what you prefer.
+        <br>The overlay has a transparent background. Position and resize the source to place the timer where you want it on screen.
+      </p>
+    </div>
+    <!-- Preview -->
+    <div class="control-section preview-sticky">
+      <h3>Preview</h3>
+      <div class="preview-container">
+        <div id="timer-preview">00:00</div>
+      </div>
+    </div>
+
+    <!-- Timer Controls -->
+    <div class="control-section">
+      <h3>Timer Controls</h3>
+
+      <div class="flex gap-3 mb-4">
+        <button id="btn-start" class="btn-control btn-start flex-1">Start</button>
+        <button id="btn-stop" class="btn-control btn-stop flex-1">Stop</button>
+        <button id="btn-reset" class="btn-control btn-reset flex-1">Reset</button>
+      </div>
+
+      <div class="grid-2 mb-4">
+        <div>
+          <label>Duration</label>
+          <div class="input-with-button">
+            <input type="text" id="duration" class="input-dark" placeholder="5:00 or 5m" value="5:00">
+            <button type="button" id="btn-update-duration" class="btn-inline">Update</button>
+          </div>
+        </div>
+        <div>
+          <label>Mode</label>
+          <select id="mode" class="input-dark">
+            <option value="countdown">Count Down</option>
+            <option value="countup">Count Up</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex gap-2 mb-4">
+        <button class="btn-control btn-adjust" data-adjust="-60000">-1m</button>
+        <button class="btn-control btn-adjust" data-adjust="-10000">-10s</button>
+        <button class="btn-control btn-adjust" data-adjust="10000">+10s</button>
+        <button class="btn-control btn-adjust" data-adjust="60000">+1m</button>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <label>Countdown End Behavior</label>
+          <select id="end-behavior" class="input-dark">
+            <option value="stop">Stop at 00:00</option>
+            <option value="negative">Count into negative</option>
+            <option value="hide">Hide timer</option>
+            <option value="confetti">Confetti celebration</option>
+          </select>
+        </div>
+        <div>
+          <label>Format</label>
+          <select id="format" class="input-dark">
+            <option value="auto">Auto</option>
+            <option value="HH:MM:SS">HH:MM:SS</option>
+            <option value="MM:SS">MM:SS</option>
+            <option value="SS">Seconds only</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Styling -->
+    <div class="control-section">
+      <h3>Appearance</h3>
+
+      <div class="grid-2 mb-4">
+        <div>
+          <label>Font Family</label>
+          <select id="font-family" class="input-dark">
+            <optgroup label="Sans-Serif (tabular figures)">
+              <option value="'Inter', sans-serif">Inter</option>
+              <option value="'Roboto', sans-serif">Roboto</option>
+              <option value="'Open Sans', sans-serif">Open Sans</option>
+              <option value="'Lato', sans-serif">Lato</option>
+              <option value="'Noto Sans', sans-serif">Noto Sans</option>
+              <option value="'Poppins', sans-serif">Poppins</option>
+              <option value="'Nunito', sans-serif">Nunito</option>
+            </optgroup>
+            <optgroup label="Monospace">
+              <option value="'Roboto Mono', monospace">Roboto Mono</option>
+              <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+              <option value="'Fira Code', monospace">Fira Code</option>
+              <option value="'Source Code Pro', monospace">Source Code Pro</option>
+              <option value="'IBM Plex Mono', monospace">IBM Plex Mono</option>
+              <option value="'Courier New', monospace">Courier New</option>
+              <option value="monospace">System Monospace</option>
+            </optgroup>
+          </select>
+        </div>
+        <div>
+          <label>Font Weight</label>
+          <select id="font-weight" class="input-dark">
+            <option value="400">Regular</option>
+            <option value="500">Medium</option>
+            <option value="600" selected>Semibold</option>
+            <option value="700">Bold</option>
+            <option value="800">Extra Bold</option>
+            <option value="900">Black</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label>Font Size</label>
+        <div class="range-with-value">
+          <input type="range" id="font-size" min="24" max="200" value="72">
+          <span id="font-size-display">72px</span>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label>Text Color</label>
+        <div class="color-input-wrapper">
+          <input type="color" id="text-color-picker" value="#FFFFFF">
+          <input type="text" id="text-color" class="input-dark" value="#FFFFFF">
+        </div>
+      </div>
+
+      <!-- Shadow -->
+      <div class="flex items-center justify-between mb-3">
+        <label class="mb-0">Text Shadow</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="shadow-enabled" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div id="shadow-controls" class="grid-2 mb-4">
+        <div>
+          <label>Shadow Color</label>
+          <div class="color-input-wrapper">
+            <input type="color" id="shadow-color-picker" value="#000000">
+            <input type="text" id="shadow-color" class="input-dark" value="rgba(0,0,0,0.8)">
+          </div>
+        </div>
+        <div>
+          <label>Blur</label>
+          <div class="range-with-value">
+            <input type="range" id="shadow-blur" min="0" max="20" value="4">
+            <span>4px</span>
+          </div>
+        </div>
+        <div>
+          <label>Offset X</label>
+          <div class="range-with-value">
+            <input type="range" id="shadow-offset-x" min="-10" max="10" value="2">
+            <span>2px</span>
+          </div>
+        </div>
+        <div>
+          <label>Offset Y</label>
+          <div class="range-with-value">
+            <input type="range" id="shadow-offset-y" min="-10" max="10" value="2">
+            <span>2px</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stroke -->
+      <div class="flex items-center justify-between mb-3">
+        <label class="mb-0">Text Stroke</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="stroke-enabled" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div id="stroke-controls" class="grid-2">
+        <div>
+          <label>Stroke Color</label>
+          <div class="color-input-wrapper">
+            <input type="color" id="stroke-color-picker" value="#000000">
+            <input type="text" id="stroke-color" class="input-dark" value="#000000">
+          </div>
+        </div>
+        <div>
+          <label>Width</label>
+          <div class="range-with-value">
+            <input type="range" id="stroke-width" min="0" max="10" value="2">
+            <span>2px</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/timerUtils.js"></script>
+  <script src="/js/shared.js"></script>
+  <script src="/js/control.js"></script>
+</body>
+</html>
