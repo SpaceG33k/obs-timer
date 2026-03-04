@@ -202,9 +202,17 @@ function setupSocketHandlers(io, timerManager) {
       io.to(`channel:${currentChannel}`).emit('config:updated', state);
     });
 
-    // Disconnect handling
+    // Disconnect handling — clean up sync intervals when no clients remain
     socket.on('disconnect', () => {
       console.log(`Client disconnected: ${socket.id}`);
+
+      if (currentChannel) {
+        const room = io.sockets.adapter.rooms.get(`channel:${currentChannel}`);
+        if (!room || room.size === 0) {
+          console.log(`No clients in channel ${currentChannel}, stopping sync`);
+          timerManager.stopSync(currentChannel);
+        }
+      }
     });
   });
 }

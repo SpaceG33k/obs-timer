@@ -48,6 +48,35 @@
   const strokeWidthSlider = document.getElementById('stroke-width');
 
   const copyUrlBtn = document.getElementById('copy-url');
+  const connectionDot = document.getElementById('connection-status');
+
+  // Echo suppression: track which element the user is actively interacting with
+  let activeInput = null;
+  let activeInputClearTimeout = null;
+
+  function setActiveInput(el) {
+    clearTimeout(activeInputClearTimeout);
+    activeInput = el;
+  }
+
+  function clearActiveInput() {
+    // Delay clearing so the change event can fire first
+    activeInputClearTimeout = setTimeout(() => { activeInput = null; }, 100);
+  }
+
+  // Attach echo suppression via event delegation (captures cover all inputs/selects)
+  document.addEventListener('focus', (e) => {
+    if (e.target.matches('input, select')) setActiveInput(e.target);
+  }, true);
+  document.addEventListener('pointerdown', (e) => {
+    if (e.target.matches('input, select')) setActiveInput(e.target);
+  }, true);
+  document.addEventListener('blur', (e) => {
+    if (e.target.matches('input, select')) clearActiveInput();
+  }, true);
+  document.addEventListener('pointerup', (e) => {
+    if (e.target.matches('input, select')) clearActiveInput();
+  }, true);
 
   // Cache slider display span elements to avoid fragile querySelector chains
   const shadowBlurDisplay = shadowBlurSlider.closest('.range-with-value')?.querySelector('span');
@@ -75,12 +104,20 @@
     }
   }
 
-  // Update UI from state
+  // Update UI from state, skipping the element the user is actively interacting with
   function updateUIFromState(state) {
+    function setIfNotActive(el, value) {
+      if (el !== activeInput) el.value = value;
+    }
+
+    function setCheckedIfNotActive(el, checked) {
+      if (el !== activeInput) el.checked = checked;
+    }
+
     // Timer settings
-    if (state.mode) modeSelect.value = state.mode;
-    if (state.end_behavior) endBehaviorSelect.value = state.end_behavior;
-    if (state.format) formatSelect.value = state.format;
+    if (state.mode) setIfNotActive(modeSelect, state.mode);
+    if (state.end_behavior) setIfNotActive(endBehaviorSelect, state.end_behavior);
+    if (state.format) setIfNotActive(formatSelect, state.format);
 
     // Convert duration_ms to readable format
     const totalSeconds = Math.floor(state.duration_ms / 1000);
@@ -88,38 +125,47 @@
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
+    let durationStr;
     if (hours > 0) {
-      durationInput.value = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      durationStr = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     } else if (minutes > 0) {
-      durationInput.value = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      durationStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
     } else {
-      durationInput.value = `0:${seconds.toString().padStart(2, '0')}`;
+      durationStr = `0:${seconds.toString().padStart(2, '0')}`;
     }
+    setIfNotActive(durationInput, durationStr);
 
     // Styling
-    if (state.font_family) fontFamilySelect.value = state.font_family;
-    if (state.font_weight) fontWeightSelect.value = state.font_weight;
+    if (state.font_family) setIfNotActive(fontFamilySelect, state.font_family);
+    if (state.font_weight) setIfNotActive(fontWeightSelect, state.font_weight);
     if (state.font_size !== undefined) {
-      fontSizeSlider.value = state.font_size;
-      fontSizeDisplay.textContent = state.font_size + 'px';
+      setIfNotActive(fontSizeSlider, state.font_size);
+      if (fontSizeSlider !== activeInput) fontSizeDisplay.textContent = state.font_size + 'px';
     }
     if (state.text_color) {
-      textColorInput.value = state.text_color;
-      textColorPicker.value = state.text_color.startsWith('#') ? state.text_color : '#FFFFFF';
+      setIfNotActive(textColorInput, state.text_color);
+      if (textColorPicker !== activeInput) {
+        textColorPicker.value = state.text_color.startsWith('#') ? state.text_color : '#FFFFFF';
+      }
     }
 
-    shadowEnabled.checked = !!state.shadow_enabled;
+    setCheckedIfNotActive(shadowEnabled, !!state.shadow_enabled);
     shadowControls.style.opacity = state.shadow_enabled ? '1' : '0.5';
-    if (state.shadow_color) shadowColorInput.value = state.shadow_color;
-    if (state.shadow_blur !== undefined) shadowBlurSlider.value = state.shadow_blur;
-    if (state.shadow_offset_x !== undefined) shadowOffsetXSlider.value = state.shadow_offset_x;
-    if (state.shadow_offset_y !== undefined) shadowOffsetYSlider.value = state.shadow_offset_y;
+    if (state.shadow_color) {
+      setIfNotActive(shadowColorInput, state.shadow_color);
+      if (shadowColorPicker !== activeInput) shadowColorPicker.value = state.shadow_color;
+    }
+    if (state.shadow_blur !== undefined) setIfNotActive(shadowBlurSlider, state.shadow_blur);
+    if (state.shadow_offset_x !== undefined) setIfNotActive(shadowOffsetXSlider, state.shadow_offset_x);
+    if (state.shadow_offset_y !== undefined) setIfNotActive(shadowOffsetYSlider, state.shadow_offset_y);
 
-    strokeEnabled.checked = !!state.stroke_enabled;
+    setCheckedIfNotActive(strokeEnabled, !!state.stroke_enabled);
     strokeControls.style.opacity = state.stroke_enabled ? '1' : '0.5';
-    if (state.stroke_color) strokeColorInput.value = state.stroke_color;
-    if (state.stroke_color) strokeColorPicker.value = state.stroke_color;
-    if (state.stroke_width !== undefined) strokeWidthSlider.value = state.stroke_width;
+    if (state.stroke_color) {
+      setIfNotActive(strokeColorInput, state.stroke_color);
+      if (strokeColorPicker !== activeInput) strokeColorPicker.value = state.stroke_color;
+    }
+    if (state.stroke_width !== undefined) setIfNotActive(strokeWidthSlider, state.stroke_width);
 
     updateSliderDisplays();
     updateStatus(state.is_running);
@@ -134,27 +180,32 @@
     if (strokeWidthDisplay) strokeWidthDisplay.textContent = strokeWidthSlider.value + 'px';
   }
 
+  // Connection status helpers
+  function setConnected(connected) {
+    connectionDot.classList.toggle('connected', connected);
+    connectionDot.classList.toggle('disconnected', !connected);
+  }
+
+  // Shared handler for all state updates (initial, sync, config)
+  function handleStateUpdate(state) {
+    updateUIFromState(state);
+    applyTimerStyles(timerPreview, state);
+  }
+
   // Create connection
   const connection = createTimerConnection(timer, {
     onConnect: () => {
       console.log('Connected to server');
+      setConnected(true);
     },
 
-    onState: (state) => {
-      updateUIFromState(state);
-      applyTimerStyles(timerPreview, state);
-    },
-
-    onSync: (state) => {
-      updateStatus(state.is_running);
-    },
-
-    onConfigUpdate: (state) => {
-      applyTimerStyles(timerPreview, state);
-    },
+    onState: handleStateUpdate,
+    onSync: handleStateUpdate,
+    onConfigUpdate: handleStateUpdate,
 
     onDisconnect: () => {
       console.log('Disconnected');
+      setConnected(false);
     }
   });
 

@@ -50,9 +50,21 @@ function createTimerConnection(channel, callbacks = {}) {
   let serverTimestamp = 0;
   let animationFrame = null;
 
+  // Periodic state refresh every 30s as a safety net
+  let refreshInterval = null;
+
   // Join channel on connect
   socket.on('connect', () => {
     socket.emit('join', { channel });
+
+    // Start periodic refresh (clear any previous to avoid duplicates on reconnect)
+    clearInterval(refreshInterval);
+    refreshInterval = setInterval(() => {
+      if (socket.connected) {
+        socket.emit('join', { channel });
+      }
+    }, 30000);
+
     if (callbacks.onConnect) callbacks.onConnect();
   });
 
@@ -90,6 +102,7 @@ function createTimerConnection(channel, callbacks = {}) {
   });
 
   socket.on('disconnect', () => {
+    clearInterval(refreshInterval);
     if (callbacks.onDisconnect) callbacks.onDisconnect();
   });
 
