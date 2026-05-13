@@ -85,17 +85,17 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-function serveTimerPage(htmlFile) {
+function serveTimerPage(routePath, htmlFile) {
   return (req, res) => {
     const sanitizedTimer = sanitizeChannel(req.query.timer);
     if (!sanitizedTimer) return res.redirect('/?error=invalid_timer');
-    if (req.query.timer !== sanitizedTimer) return res.redirect(`${req.path}?timer=${sanitizedTimer}`);
+    if (req.query.timer !== sanitizedTimer) return res.redirect(`${routePath}?timer=${encodeURIComponent(sanitizedTimer)}`);
     res.sendFile(path.join(__dirname, '../public/', htmlFile));
   };
 }
 
-app.get('/overlay', serveTimerPage('overlay.html'));
-app.get('/control', serveTimerPage('control.html'));
+app.get('/overlay', serveTimerPage('/overlay', 'overlay.html'));
+app.get('/control', serveTimerPage('/control', 'control.html'));
 
 // Start server
 httpServer.listen(PORT, () => {
