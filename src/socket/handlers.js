@@ -10,13 +10,14 @@ const MAX_ADJUST_MS = 60 * 60 * 1000; // 1 hour max adjustment per call
 const RATE_LIMIT_WINDOW_MS = 1000; // 1 second window
 const RATE_LIMIT_MAX_EVENTS = 10; // max events per window
 
+const clamp = (ms, min, max) =>
+  typeof ms === 'number' && !isNaN(ms) ? Math.max(min, Math.min(max, ms)) : null;
+
 function setupSocketHandlers(io, timerManager) {
   io.on('connection', (socket) => {
     console.log(`Client connected: ${socket.id}`);
 
     let currentChannel = null;
-
-    // Rate limiting state
     const eventCounts = new Map(); // eventName -> { count, resetTime }
 
     function checkRateLimit(eventName) {
@@ -27,25 +28,25 @@ function setupSocketHandlers(io, timerManager) {
         eventCounts.set(eventName, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
         return true;
       }
-
-      if (limit.count >= RATE_LIMIT_MAX_EVENTS) {
-        return false;
-      }
-
+      if (limit.count >= RATE_LIMIT_MAX_EVENTS) return false;
       limit.count++;
       return true;
     }
 
-    // Helper to validate duration is within bounds
-    function validateDuration(ms) {
-      if (typeof ms !== 'number' || isNaN(ms)) return null;
-      return Math.max(MIN_DURATION_MS, Math.min(MAX_DURATION_MS, ms));
+    function guard(eventName) {
+      if (!currentChannel) {
+        socket.emit('error', { message: 'Not joined to any channel' });
+        return false;
+      }
+      if (!checkRateLimit(eventName)) {
+        socket.emit('error', { message: 'Rate limit exceeded' });
+        return false;
+      }
+      return true;
     }
 
-    // Helper to validate adjustment delta
-    function validateDelta(ms) {
-      if (typeof ms !== 'number' || isNaN(ms)) return null;
-      return Math.max(-MAX_ADJUST_MS, Math.min(MAX_ADJUST_MS, ms));
+    function broadcast(event, state) {
+      io.to(`channel:${currentChannel}`).emit(event, state);
     }
 
     // Join a channel
@@ -57,7 +58,6 @@ function setupSocketHandlers(io, timerManager) {
         return;
       }
 
-      // Leave previous channel if any
       if (currentChannel) {
         socket.leave(`channel:${currentChannel}`);
       }
@@ -65,80 +65,41 @@ function setupSocketHandlers(io, timerManager) {
       currentChannel = sanitizedChannel;
       socket.join(`channel:${currentChannel}`);
 
-      // Send current state
-      const state = timerManager.getState(currentChannel);
-      socket.emit('timer:state', state);
-
+      socket.emit('timer:state', timerManager.getState(currentChannel));
       console.log(`Client ${socket.id} joined channel: ${currentChannel}`);
     });
 
-    // Timer controls
     socket.on('timer:start', () => {
-      if (!currentChannel) {
-        socket.emit('error', { message: 'Not joined to any channel' });
-        return;
-      }
-      if (!checkRateLimit('timer:start')) {
-        socket.emit('error', { message: 'Rate limit exceeded' });
-        return;
-      }
-
-      const state = timerManager.start(currentChannel);
-      io.to(`channel:${currentChannel}`).emit('timer:sync', state);
+      if (!guard('timer:start')) return;
+      broadcast('timer:sync', timerManager.start(currentChannel));
     });
 
     socket.on('timer:stop', () => {
-      if (!currentChannel) {
-        socket.emit('error', { message: 'Not joined to any channel' });
-        return;
-      }
-      if (!checkRateLimit('timer:stop')) {
-        socket.emit('error', { message: 'Rate limit exceeded' });
-        return;
-      }
-
-      const state = timerManager.stop(currentChannel);
-      io.to(`channel:${currentChannel}`).emit('timer:sync', state);
+      if (!guard('timer:stop')) return;
+      broadcast('timer:sync', timerManager.stop(currentChannel));
     });
 
     socket.on('timer:reset', ({ duration } = {}) => {
-      if (!currentChannel) {
-        socket.emit('error', { message: 'Not joined to any channel' });
-        return;
-      }
-      if (!checkRateLimit('timer:reset')) {
-        socket.emit('error', { message: 'Rate limit exceeded' });
-        return;
-      }
+      if (!guard('timer:reset')) return;
 
       let duration_ms = null;
       if (duration !== undefined) {
-        const parsed = parseDuration(duration);
-        duration_ms = validateDuration(parsed);
+        duration_ms = clamp(parseDuration(duration), MIN_DURATION_MS, MAX_DURATION_MS);
         if (duration_ms === null) {
           socket.emit('error', { message: 'Invalid duration value' });
           return;
         }
       }
 
-      const state = timerManager.reset(currentChannel, duration_ms);
-      io.to(`channel:${currentChannel}`).emit('timer:sync', state);
+      broadcast('timer:sync', timerManager.reset(currentChannel, duration_ms));
     });
 
     socket.on('timer:set', ({ duration, mode, remaining }) => {
-      if (!currentChannel) {
-        socket.emit('error', { message: 'Not joined to any channel' });
-        return;
-      }
-      if (!checkRateLimit('timer:set')) {
-        socket.emit('error', { message: 'Rate limit exceeded' });
-        return;
-      }
+      if (!guard('timer:set')) return;
 
       const updates = {};
       if (duration !== undefined) {
-        const parsed = parseDuration(duration);
-        const validated = validateDuration(parsed);
+        const validated = clamp(parseDuration(duration), MIN_DURATION_MS, MAX_DURATION_MS);
         if (validated === null) {
           socket.emit('error', { message: 'Invalid duration value' });
           return;
@@ -153,8 +114,7 @@ function setupSocketHandlers(io, timerManager) {
         updates.mode = mode;
       }
       if (remaining !== undefined) {
-        const parsed = parseDuration(remaining);
-        const validated = validateDuration(parsed);
+        const validated = clamp(parseDuration(remaining), MIN_DURATION_MS, MAX_DURATION_MS);
         if (validated === null) {
           socket.emit('error', { message: 'Invalid remaining value' });
           return;
@@ -162,44 +122,24 @@ function setupSocketHandlers(io, timerManager) {
         updates.remaining_ms = validated;
       }
 
-      const state = timerManager.set(currentChannel, updates);
-      io.to(`channel:${currentChannel}`).emit('timer:sync', state);
+      broadcast('timer:sync', timerManager.set(currentChannel, updates));
     });
 
     socket.on('timer:adjust', ({ delta }) => {
-      if (!currentChannel) {
-        socket.emit('error', { message: 'Not joined to any channel' });
-        return;
-      }
-      if (!checkRateLimit('timer:adjust')) {
-        socket.emit('error', { message: 'Rate limit exceeded' });
-        return;
-      }
+      if (!guard('timer:adjust')) return;
 
-      const parsed = parseDuration(delta);
-      const delta_ms = validateDelta(parsed);
+      const delta_ms = clamp(parseDuration(delta), -MAX_ADJUST_MS, MAX_ADJUST_MS);
       if (delta_ms === null) {
         socket.emit('error', { message: 'Invalid adjustment value' });
         return;
       }
 
-      const state = timerManager.adjust(currentChannel, delta_ms);
-      io.to(`channel:${currentChannel}`).emit('timer:sync', state);
+      broadcast('timer:sync', timerManager.adjust(currentChannel, delta_ms));
     });
 
-    // Configuration updates
     socket.on('config:update', (config) => {
-      if (!currentChannel) {
-        socket.emit('error', { message: 'Not joined to any channel' });
-        return;
-      }
-      if (!checkRateLimit('config:update')) {
-        socket.emit('error', { message: 'Rate limit exceeded' });
-        return;
-      }
-
-      const state = timerManager.updateConfig(currentChannel, config);
-      io.to(`channel:${currentChannel}`).emit('config:updated', state);
+      if (!guard('config:update')) return;
+      broadcast('config:updated', timerManager.updateConfig(currentChannel, config));
     });
 
     // Disconnect handling — clean up sync intervals when no clients remain

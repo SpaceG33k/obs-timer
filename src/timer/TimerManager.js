@@ -103,29 +103,21 @@ class TimerManager {
    */
   set(channel, { duration_ms, mode, remaining_ms }) {
     const timer = getOrCreateTimer(channel);
-    const updates = {};
+    const updates = { is_running: 0, started_at: null };
 
     if (duration_ms !== undefined) {
       updates.duration_ms = duration_ms;
-      // Also reset remaining time to new duration (for countdown) or 0 (for countup)
-      const currentMode = mode !== undefined ? mode : timer.mode;
-      updates.remaining_ms = currentMode === 'countdown' ? duration_ms : 0;
+      updates.remaining_ms = (mode ?? timer.mode) === 'countdown' ? duration_ms : 0;
     }
 
     if (mode !== undefined) {
       updates.mode = mode;
-      // Reset remaining time based on new mode
-      const dur = duration_ms !== undefined ? duration_ms : timer.duration_ms;
-      updates.remaining_ms = mode === 'countdown' ? dur : 0;
+      updates.remaining_ms = mode === 'countdown' ? (duration_ms ?? timer.duration_ms) : 0;
     }
 
     if (remaining_ms !== undefined) {
       updates.remaining_ms = remaining_ms;
     }
-
-    // Stop timer when setting new values
-    updates.is_running = 0;
-    updates.started_at = null;
 
     updateTimer(channel, updates);
     this.stopSync(channel);
@@ -193,35 +185,25 @@ class TimerManager {
     }
   }
 
+  _markStopped(channel, remaining_ms = 0) {
+    updateTimer(channel, { is_running: 0, remaining_ms, started_at: null });
+    this.stopSync(channel);
+  }
+
   /**
    * Handle timer reaching zero
    */
   handleTimerEnd(channel, state) {
     const timer = getOrCreateTimer(channel);
 
-    switch (timer.end_behavior) {
-      case 'stop':
-      case 'confetti':
-      case 'hide':
-        updateTimer(channel, {
-          is_running: 0,
-          remaining_ms: 0,
-          started_at: null
-        });
-        this.stopSync(channel);
-        break;
-
-      case 'negative':
-        // Keep running into negative, but stop after max duration to prevent memory leak
-        if (state.remaining_ms < -MAX_NEGATIVE_DURATION_MS) {
-          updateTimer(channel, {
-            is_running: 0,
-            remaining_ms: state.remaining_ms,
-            started_at: null
-          });
-          this.stopSync(channel);
-        }
-        break;
+    if (timer.end_behavior === 'negative') {
+      // Keep running into negative, but stop after max duration to prevent memory leak
+      if (state.remaining_ms < -MAX_NEGATIVE_DURATION_MS) {
+        this._markStopped(channel, state.remaining_ms);
+      }
+    } else {
+      // stop, confetti, hide
+      this._markStopped(channel);
     }
 
     this.io.to(`channel:${channel}`).emit('timer:ended', {
@@ -237,49 +219,29 @@ class TimerManager {
     const timers = getAllTimers();
 
     for (const timer of timers) {
-      if (timer.is_running && timer.started_at) {
-        const remaining_ms = this.calculateRemaining(timer);
+      if (!timer.is_running || !timer.started_at) continue;
 
-        if (timer.mode === 'countdown' && remaining_ms <= 0) {
-          switch (timer.end_behavior) {
-            case 'stop':
-            case 'hide':
-            case 'confetti':
-              // Timer ended while server was down - mark as stopped
-              updateTimer(timer.channel, {
-                is_running: 0,
-                remaining_ms: 0,
-                started_at: null
-              });
-              console.log(`Timer for channel ${timer.channel} ended while server was down`);
-              continue;
+      const remaining_ms = this.calculateRemaining(timer);
 
-            case 'negative':
-              // Check if exceeded max negative duration
-              if (remaining_ms < -MAX_NEGATIVE_DURATION_MS) {
-                updateTimer(timer.channel, {
-                  is_running: 0,
-                  remaining_ms: remaining_ms,
-                  started_at: null
-                });
-                console.log(`Timer for channel ${timer.channel} exceeded max negative duration`);
-                continue;
-              }
-              // Otherwise, continue running in negative
-              break;
+      if (timer.mode === 'countdown' && remaining_ms <= 0) {
+        if (timer.end_behavior === 'negative') {
+          if (remaining_ms < -MAX_NEGATIVE_DURATION_MS) {
+            updateTimer(timer.channel, { is_running: 0, remaining_ms, started_at: null });
+            console.log(`Timer for channel ${timer.channel} exceeded max negative duration`);
+            continue;
           }
+        } else {
+          // stop, hide, confetti — timer ended while server was down
+          updateTimer(timer.channel, { is_running: 0, remaining_ms: 0, started_at: null });
+          console.log(`Timer for channel ${timer.channel} ended while server was down`);
+          continue;
         }
-
-        // Update the remaining time and reset started_at
-        updateTimer(timer.channel, {
-          remaining_ms,
-          started_at: Date.now()
-        });
-
-        // Restart sync
-        this.startSync(timer.channel);
-        console.log(`Restored timer for channel: ${timer.channel}`);
       }
+
+      // Update the remaining time and reset started_at
+      updateTimer(timer.channel, { remaining_ms, started_at: Date.now() });
+      this.startSync(timer.channel);
+      console.log(`Restored timer for channel: ${timer.channel}`);
     }
   }
 }

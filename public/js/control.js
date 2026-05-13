@@ -262,113 +262,59 @@
     connection.updateConfig(config);
   }
 
-  endBehaviorSelect.addEventListener('change', () => {
-    updateConfig({ end_behavior: endBehaviorSelect.value });
+  // Bind a select to a config key (parseInt for numeric keys)
+  function bindSelect(select, key, parse = (v) => v) {
+    select.addEventListener('change', () => updateConfig({ [key]: parse(select.value) }));
+  }
+
+  // Bind a slider with a display span; optional onInput for live preview
+  function bindSlider(slider, display, key, onInput) {
+    slider.addEventListener('input', () => {
+      if (display) display.textContent = slider.value + 'px';
+      if (onInput) onInput(slider.value);
+    });
+    slider.addEventListener('change', () => updateConfig({ [key]: parseInt(slider.value) }));
+  }
+
+  // Bind a color picker + text input pair; optional onInput for live preview
+  function bindColor(picker, textInput, key, onInput) {
+    picker.addEventListener('input', () => {
+      textInput.value = picker.value;
+      if (onInput) onInput(picker.value);
+    });
+    picker.addEventListener('change', () => updateConfig({ [key]: picker.value }));
+    textInput.addEventListener('change', () => updateConfig({ [key]: textInput.value }));
+  }
+
+  // Bind an enable-checkbox that toggles opacity on its controls group
+  function bindToggle(checkbox, controls, key) {
+    checkbox.addEventListener('change', () => {
+      controls.style.opacity = checkbox.checked ? '1' : '0.5';
+      updateConfig({ [key]: checkbox.checked ? 1 : 0 });
+    });
+  }
+
+  bindSelect(endBehaviorSelect, 'end_behavior');
+  bindSelect(formatSelect, 'format');
+  bindSelect(fontFamilySelect, 'font_family');
+  bindSelect(fontWeightSelect, 'font_weight', (v) => parseInt(v));
+
+  bindSlider(fontSizeSlider, fontSizeDisplay, 'font_size', (v) => {
+    timerPreview.style.fontSize = v + 'px';
+  });
+  bindColor(textColorPicker, textColorInput, 'text_color', (v) => {
+    timerPreview.style.color = v;
   });
 
-  formatSelect.addEventListener('change', () => {
-    updateConfig({ format: formatSelect.value });
-  });
+  bindToggle(shadowEnabled, shadowControls, 'shadow_enabled');
+  bindColor(shadowColorPicker, shadowColorInput, 'shadow_color');
+  bindSlider(shadowBlurSlider, shadowBlurDisplay, 'shadow_blur');
+  bindSlider(shadowOffsetXSlider, shadowOffsetXDisplay, 'shadow_offset_x');
+  bindSlider(shadowOffsetYSlider, shadowOffsetYDisplay, 'shadow_offset_y');
 
-  // Styling changes
-  fontFamilySelect.addEventListener('change', () => {
-    updateConfig({ font_family: fontFamilySelect.value });
-  });
-
-  fontWeightSelect.addEventListener('change', () => {
-    updateConfig({ font_weight: parseInt(fontWeightSelect.value) });
-  });
-
-  fontSizeSlider.addEventListener('input', () => {
-    fontSizeDisplay.textContent = fontSizeSlider.value + 'px';
-    timerPreview.style.fontSize = fontSizeSlider.value + 'px';
-  });
-
-  fontSizeSlider.addEventListener('change', () => {
-    updateConfig({ font_size: parseInt(fontSizeSlider.value) });
-  });
-
-  // Text color
-  textColorPicker.addEventListener('input', () => {
-    textColorInput.value = textColorPicker.value;
-    timerPreview.style.color = textColorPicker.value;
-  });
-
-  textColorPicker.addEventListener('change', () => {
-    updateConfig({ text_color: textColorPicker.value });
-  });
-
-  textColorInput.addEventListener('change', () => {
-    updateConfig({ text_color: textColorInput.value });
-  });
-
-  // Shadow controls
-  shadowEnabled.addEventListener('change', () => {
-    shadowControls.style.opacity = shadowEnabled.checked ? '1' : '0.5';
-    updateConfig({ shadow_enabled: shadowEnabled.checked ? 1 : 0 });
-  });
-
-  shadowColorPicker.addEventListener('input', () => {
-    shadowColorInput.value = shadowColorPicker.value;
-  });
-
-  shadowColorPicker.addEventListener('change', () => {
-    updateConfig({ shadow_color: shadowColorPicker.value });
-  });
-
-  shadowColorInput.addEventListener('change', () => {
-    updateConfig({ shadow_color: shadowColorInput.value });
-  });
-
-  shadowBlurSlider.addEventListener('input', () => {
-    if (shadowBlurDisplay) shadowBlurDisplay.textContent = shadowBlurSlider.value + 'px';
-  });
-
-  shadowBlurSlider.addEventListener('change', () => {
-    updateConfig({ shadow_blur: parseInt(shadowBlurSlider.value) });
-  });
-
-  shadowOffsetXSlider.addEventListener('input', () => {
-    if (shadowOffsetXDisplay) shadowOffsetXDisplay.textContent = shadowOffsetXSlider.value + 'px';
-  });
-
-  shadowOffsetXSlider.addEventListener('change', () => {
-    updateConfig({ shadow_offset_x: parseInt(shadowOffsetXSlider.value) });
-  });
-
-  shadowOffsetYSlider.addEventListener('input', () => {
-    if (shadowOffsetYDisplay) shadowOffsetYDisplay.textContent = shadowOffsetYSlider.value + 'px';
-  });
-
-  shadowOffsetYSlider.addEventListener('change', () => {
-    updateConfig({ shadow_offset_y: parseInt(shadowOffsetYSlider.value) });
-  });
-
-  // Stroke controls
-  strokeEnabled.addEventListener('change', () => {
-    strokeControls.style.opacity = strokeEnabled.checked ? '1' : '0.5';
-    updateConfig({ stroke_enabled: strokeEnabled.checked ? 1 : 0 });
-  });
-
-  strokeColorPicker.addEventListener('input', () => {
-    strokeColorInput.value = strokeColorPicker.value;
-  });
-
-  strokeColorPicker.addEventListener('change', () => {
-    updateConfig({ stroke_color: strokeColorPicker.value });
-  });
-
-  strokeColorInput.addEventListener('change', () => {
-    updateConfig({ stroke_color: strokeColorInput.value });
-  });
-
-  strokeWidthSlider.addEventListener('input', () => {
-    if (strokeWidthDisplay) strokeWidthDisplay.textContent = strokeWidthSlider.value + 'px';
-  });
-
-  strokeWidthSlider.addEventListener('change', () => {
-    updateConfig({ stroke_width: parseInt(strokeWidthSlider.value) });
-  });
+  bindToggle(strokeEnabled, strokeControls, 'stroke_enabled');
+  bindColor(strokeColorPicker, strokeColorInput, 'stroke_color');
+  bindSlider(strokeWidthSlider, strokeWidthDisplay, 'stroke_width');
 
   // Copy URL button
   copyUrlBtn.addEventListener('click', () => {

@@ -130,90 +130,15 @@
 
     // Delay confetti slightly to sync with character explosion
     setTimeout(() => {
-      // Initial big burst from where the timer was
-      confetti({
-        particleCount: 80,
-        spread: 100,
-        origin: { x, y },
-        colors: colors,
-        ticks: 300,
-        gravity: 0.8,
-        scalar: 1.2,
-        shapes: ['circle', 'square'],
-        drift: 0
-      });
-
-      // Delayed secondary burst
-      setTimeout(() => {
-        confetti({
-          particleCount: 50,
-          spread: 120,
-          origin: { x, y: y - 0.1 },
-          colors: colors,
-          ticks: 250,
-          gravity: 1,
-          scalar: 0.9,
-          shapes: ['circle']
-        });
-      }, 150);
-
-      // Side cannons
-      setTimeout(() => {
-        // Left cannon
-        confetti({
-          particleCount: 100,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0, y: 0.7 },
-          colors: colors,
-          ticks: 300,
-          gravity: 0.7,
-          scalar: 1.1,
-          drift: 1,
-          shapes: ['circle', 'square']
-        });
-        // Right cannon
-        confetti({
-          particleCount: 100,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1, y: 0.7 },
-          colors: colors,
-          ticks: 300,
-          gravity: 0.7,
-          scalar: 1.1,
-          drift: -1,
-          shapes: ['circle', 'square']
-        });
-      }, 300);
-
-      // Second wave of cannons
-      setTimeout(() => {
-        confetti({
-          particleCount: 60,
-          angle: 55,
-          spread: 40,
-          origin: { x: 0, y: 0.8 },
-          colors: colors,
-          ticks: 280,
-          gravity: 0.8,
-          scalar: 0.9,
-          drift: 0.8,
-          shapes: ['circle']
-        });
-        confetti({
-          particleCount: 60,
-          angle: 125,
-          spread: 40,
-          origin: { x: 1, y: 0.8 },
-          colors: colors,
-          ticks: 280,
-          gravity: 0.8,
-          scalar: 0.9,
-          drift: -0.8,
-          shapes: ['circle']
-        });
-      }, 500);
+      const bursts = [
+        { delay: 0,   particleCount: 80,  spread: 100, origin: { x, y },          ticks: 300, gravity: 0.8, scalar: 1.2, drift: 0,    shapes: ['circle', 'square'] },
+        { delay: 150, particleCount: 50,  spread: 120, origin: { x, y: y - 0.1 }, ticks: 250, gravity: 1,   scalar: 0.9,              shapes: ['circle'] },
+        { delay: 300, particleCount: 100, angle: 60,  spread: 55, origin: { x: 0, y: 0.7 }, ticks: 300, gravity: 0.7, scalar: 1.1, drift: 1,    shapes: ['circle', 'square'] },
+        { delay: 300, particleCount: 100, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, ticks: 300, gravity: 0.7, scalar: 1.1, drift: -1,   shapes: ['circle', 'square'] },
+        { delay: 500, particleCount: 60,  angle: 55,  spread: 40, origin: { x: 0, y: 0.8 }, ticks: 280, gravity: 0.8, scalar: 0.9, drift: 0.8,  shapes: ['circle'] },
+        { delay: 500, particleCount: 60,  angle: 125, spread: 40, origin: { x: 1, y: 0.8 }, ticks: 280, gravity: 0.8, scalar: 0.9, drift: -0.8, shapes: ['circle'] }
+      ];
+      bursts.forEach(({ delay, ...cfg }) => setTimeout(() => confetti({ ...cfg, colors }), delay));
 
       // Floating particles for 2 seconds
       const duration = 2000;

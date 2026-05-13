@@ -85,29 +85,17 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-app.get('/overlay', (req, res) => {
-  const sanitizedTimer = sanitizeChannel(req.query.timer);
-  if (!sanitizedTimer) {
-    return res.redirect('/?error=invalid_timer');
-  }
-  // Redirect to sanitized timer name if different
-  if (req.query.timer !== sanitizedTimer) {
-    return res.redirect(`/overlay?timer=${sanitizedTimer}`);
-  }
-  res.sendFile(path.join(__dirname, '../public/overlay.html'));
-});
+function serveTimerPage(htmlFile) {
+  return (req, res) => {
+    const sanitizedTimer = sanitizeChannel(req.query.timer);
+    if (!sanitizedTimer) return res.redirect('/?error=invalid_timer');
+    if (req.query.timer !== sanitizedTimer) return res.redirect(`${req.path}?timer=${sanitizedTimer}`);
+    res.sendFile(path.join(__dirname, '../public/', htmlFile));
+  };
+}
 
-app.get('/control', (req, res) => {
-  const sanitizedTimer = sanitizeChannel(req.query.timer);
-  if (!sanitizedTimer) {
-    return res.redirect('/?error=invalid_timer');
-  }
-  // Redirect to sanitized timer name if different
-  if (req.query.timer !== sanitizedTimer) {
-    return res.redirect(`/control?timer=${sanitizedTimer}`);
-  }
-  res.sendFile(path.join(__dirname, '../public/control.html'));
-});
+app.get('/overlay', serveTimerPage('overlay.html'));
+app.get('/control', serveTimerPage('control.html'));
 
 // Start server
 httpServer.listen(PORT, () => {
