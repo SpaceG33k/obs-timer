@@ -4,124 +4,152 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OBS Timer Control Panel</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <link href="/fonts/fonts.css" rel="stylesheet">
-  <link href="/css/styles.css" rel="stylesheet">
+  <link href="/css/broadcast.css" rel="stylesheet">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <style>
-    .connection-dot {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      margin-left: 4px;
-      vertical-align: middle;
-    }
-    .connection-dot.connected {
-      background: #22c55e;
-    }
-    .connection-dot.disconnected {
-      background: #ef4444;
-      animation: pulse-red 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse-red {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-  </style>
 </head>
 <body>
-  <div class="max-w-4xl mx-auto p-6 flex flex-col gap-2">
+  <main class="page page--centered">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold">Timer Control</h1>
-        <p class="text-gray-400 text-sm mt-1">Timer: <span id="channel-name" class="text-blue-400">-</span> <span id="connection-status" class="connection-dot disconnected"></span></p>
+    <header class="control-header">
+      <div class="header-left">
+        <h1 class="timer-name-h1"><span id="channel-name">…</span></h1>
+        <p>Make changes here. Your OBS overlay updates instantly.</p>
       </div>
-      <a href="/" class="btn-control btn-reset">← Home</a>
-    </div>
-    <!-- OBS URL -->
-    <div class="control-section">
-      <h3>OBS Browser Source URL</h3>
-      <div class="copy-url">
-        <input type="text" id="obs-url" class="input-dark" readonly>
-        <button id="copy-url" type="button">Copy</button>
-      </div>
-      <p class="text-gray-500 text-sm mt-2">Add this URL as a Browser Source in OBS. Set width/height to what you prefer.
-        <br>The overlay has a transparent background. Position and resize the source to place the timer where you want it on screen.
-      </p>
-    </div>
-    <!-- Preview -->
-    <div class="control-section preview-sticky">
-      <h3>Preview</h3>
-      <div class="preview-container">
-        <div id="timer-preview">00:00</div>
-      </div>
-    </div>
+      <a href="/" class="btn">← All timers</a>
+    </header>
 
-    <!-- Timer Controls -->
-    <div class="control-section">
-      <h3>Timer Controls</h3>
+    <!-- Overlay URL -->
+    <section class="section">
+      <div class="section-head">
+        <div class="head-left"><h2 class="section-title">Overlay URL</h2></div>
+      </div>
+      <div class="join">
+        <input type="text" id="obs-url" class="url-input" readonly>
+        <button id="copy-url" type="button" class="btn btn--primary">Copy</button>
+      </div>
+      <p class="help-copy">Add as a Browser Source in OBS. The overlay renders on a transparent background — size and position the source however you like.</p>
+    </section>
 
-      <div class="flex gap-3 mb-4">
-        <button id="btn-start" class="btn-control btn-start flex-1">Start</button>
-        <button id="btn-stop" class="btn-control btn-stop flex-1">Stop</button>
-        <button id="btn-reset" class="btn-control btn-reset flex-1">Reset</button>
+    <!-- Live preview -->
+    <section class="section preview-sticky">
+      <div class="section-head">
+        <div class="head-left"><h2 class="section-title">What OBS is showing</h2></div>
+        <button type="button" id="preview-bg-toggle" class="btn btn--mono" aria-pressed="false">BG: CHECKER</button>
+      </div>
+      <div class="panel style-monitor-wrap">
+        <div class="monitor">
+          <span class="crosshair tl"></span><span class="crosshair tr"></span>
+          <span class="crosshair bl"></span><span class="crosshair br"></span>
+          <div id="timer-preview" class="monitor-time" style="font-size:140px; letter-spacing:-3px">00:00</div>
+        </div>
+        <div class="monitor-caption">
+          <span class="preview-caption-left">◢ JetBrains Mono · 600 · 140px · #ffffff</span>
+          <span class="preview-caption-right">countdown · 00:00 / 05:00</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transport -->
+    <section class="section">
+      <div class="section-head">
+        <div class="head-left"><h2 class="section-title">Start, stop, adjust</h2></div>
       </div>
 
-      <div class="grid-2 mb-4">
-        <div>
-          <label>Duration</label>
-          <div class="input-with-button">
-            <input type="text" id="duration" class="input-dark" placeholder="5:00 or 5m" value="5:00">
-            <button type="button" id="btn-update-duration" class="btn-inline">Update</button>
+      <div class="deck-grid">
+        <button id="btn-start" type="button" class="deck-btn deck-btn--start">
+          <span class="glyph">▶</span><span class="label">Start</span>
+        </button>
+        <button id="btn-stop" type="button" class="deck-btn deck-btn--stop">
+          <span class="glyph">■</span><span class="label">Stop</span>
+        </button>
+        <button id="btn-reset" type="button" class="deck-btn deck-btn--reset">
+          <span class="glyph">↺</span><span class="label">Reset</span>
+        </button>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:22px">
+        <div class="control-group">
+          <div class="cg-header">
+            <label for="duration" class="cg-label">Duration</label>
+            <span class="cg-value">MM:SS or 5m</span>
+          </div>
+          <div class="join">
+            <input type="text" id="duration" class="input input--mono" placeholder="5:00 or 5m" value="5:00">
+            <button type="button" id="btn-update-duration" class="btn">Set</button>
           </div>
         </div>
-        <div>
-          <label>Mode</label>
-          <select id="mode" class="input-dark">
-            <option value="countdown">Count Down</option>
+        <div class="control-group">
+          <div class="cg-header">
+            <label for="mode" class="cg-label">Mode</label>
+          </div>
+          <select id="mode" class="select-like">
+            <option value="countdown">Countdown</option>
             <option value="countup">Count Up</option>
           </select>
+          <span class="select-hint">countdown · countup ▾</span>
         </div>
       </div>
 
-      <div class="flex gap-2 mb-4">
-        <button class="btn-control btn-adjust" data-adjust="-60000">-1m</button>
-        <button class="btn-control btn-adjust" data-adjust="-10000">-10s</button>
-        <button class="btn-control btn-adjust" data-adjust="10000">+10s</button>
-        <button class="btn-control btn-adjust" data-adjust="60000">+1m</button>
+      <div class="control-group">
+        <div class="cg-header"><span class="cg-label">Adjust</span></div>
+        <div class="adjust-grid">
+          <button class="btn btn--mono" type="button" data-adjust="-60000">−1m</button>
+          <button class="btn btn--mono" type="button" data-adjust="-10000">−10s</button>
+          <button class="btn btn--mono" type="button" data-adjust="10000">+10s</button>
+          <button class="btn btn--mono" type="button" data-adjust="60000">+1m</button>
+        </div>
       </div>
+    </section>
 
+    <!-- Behavior -->
+    <section class="section">
+      <div class="section-head">
+        <div class="head-left"><h2 class="section-title">What happens at zero</h2></div>
+      </div>
       <div class="grid-2">
-        <div>
-          <label>Countdown End Behavior</label>
-          <select id="end-behavior" class="input-dark">
+        <div class="control-group">
+          <div class="cg-header"><label for="end-behavior" class="cg-label">At end of countdown</label></div>
+          <select id="end-behavior" class="select-like">
             <option value="stop">Stop at 00:00</option>
             <option value="negative">Count into negative</option>
             <option value="hide">Hide timer</option>
             <option value="confetti">Confetti celebration</option>
           </select>
+          <span class="select-hint">stop · negative · hide · confetti ▾</span>
         </div>
-        <div>
-          <label>Format</label>
-          <select id="format" class="input-dark">
+        <div class="control-group">
+          <div class="cg-header"><label for="format" class="cg-label">Time format</label></div>
+          <select id="format" class="select-like">
             <option value="auto">Auto</option>
             <option value="HH:MM:SS">HH:MM:SS</option>
             <option value="MM:SS">MM:SS</option>
             <option value="SS">Seconds only</option>
           </select>
+          <span class="select-hint">auto · HH:MM:SS · MM:SS · SS ▾</span>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Styling -->
-    <div class="control-section">
-      <h3>Appearance</h3>
+    <!-- Appearance -->
+    <section class="section">
+      <div class="section-head">
+        <div class="head-left"><h2 class="section-title">Style the overlay</h2></div>
+      </div>
 
-      <div class="grid-2 mb-4">
-        <div>
-          <label>Font Family</label>
-          <select id="font-family" class="input-dark">
+      <!-- Family / Weight -->
+      <div class="grid-2" style="margin-bottom:22px">
+        <div class="control-group">
+          <div class="cg-header">
+            <label for="font-family" class="cg-label">Family</label>
+            <span class="cg-value">mono ▾</span>
+          </div>
+          <select id="font-family" class="select-like">
             <optgroup label="Sans-Serif (tabular figures)">
               <option value="'Inter', sans-serif">Inter</option>
               <option value="'Roboto', sans-serif">Roboto</option>
@@ -143,102 +171,147 @@
             </optgroup>
           </select>
         </div>
-        <div>
-          <label>Font Weight</label>
-          <select id="font-weight" class="input-dark">
-            <option value="400">Regular</option>
-            <option value="500">Medium</option>
-            <option value="600" selected>Semibold</option>
-            <option value="700">Bold</option>
-            <option value="800">Extra Bold</option>
-            <option value="900">Black</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <label>Font Size</label>
-        <div class="range-with-value">
-          <input type="range" id="font-size" min="24" max="200" value="72">
-          <span id="font-size-display">72px</span>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <label>Text Color</label>
-        <div class="color-input-wrapper">
-          <input type="color" id="text-color-picker" value="#FFFFFF">
-          <input type="text" id="text-color" class="input-dark" value="#FFFFFF">
-        </div>
-      </div>
-
-      <!-- Shadow -->
-      <div class="flex items-center justify-between mb-3">
-        <label class="mb-0">Text Shadow</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="shadow-enabled" checked>
-          <span class="slider"></span>
-        </label>
-      </div>
-
-      <div id="shadow-controls" class="grid-2 mb-4">
-        <div>
-          <label>Shadow Color</label>
-          <div class="color-input-wrapper">
-            <input type="color" id="shadow-color-picker" value="#000000">
-            <input type="text" id="shadow-color" class="input-dark" value="rgba(0,0,0,0.8)">
+        <div class="control-group">
+          <div class="cg-header">
+            <label for="font-weight" class="cg-label">Weight</label>
+            <span class="cg-value" id="font-weight-display">600 · Semi-Bold</span>
           </div>
-        </div>
-        <div>
-          <label>Blur</label>
           <div class="range-with-value">
-            <input type="range" id="shadow-blur" min="0" max="20" value="4">
-            <span>4px</span>
-          </div>
-        </div>
-        <div>
-          <label>Offset X</label>
-          <div class="range-with-value">
-            <input type="range" id="shadow-offset-x" min="-10" max="10" value="2">
-            <span>2px</span>
-          </div>
-        </div>
-        <div>
-          <label>Offset Y</label>
-          <div class="range-with-value">
-            <input type="range" id="shadow-offset-y" min="-10" max="10" value="2">
-            <span>2px</span>
+            <input type="range" id="font-weight" class="range" min="300" max="900" step="100" value="600">
           </div>
         </div>
       </div>
 
-      <!-- Stroke -->
-      <div class="flex items-center justify-between mb-3">
-        <label class="mb-0">Text Stroke</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="stroke-enabled" checked>
-          <span class="slider"></span>
-        </label>
+      <!-- Size / Color -->
+      <div class="grid-2" style="margin-bottom:22px">
+        <div class="control-group">
+          <div class="cg-header">
+            <label for="font-size" class="cg-label">Size</label>
+            <span class="cg-value" id="font-size-display">140 px</span>
+          </div>
+          <div class="range-with-value">
+            <input type="range" id="font-size" class="range" min="24" max="200" value="140">
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="cg-header">
+            <label class="cg-label">Color</label>
+          </div>
+          <div style="display:flex; gap:10px; align-items:center">
+            <div class="swatches">
+              <button class="swatch active" type="button" data-swatch-target="text-color-picker" data-color="#ffffff" style="background:#ffffff" aria-label="White"></button>
+              <button class="swatch" type="button" data-swatch-target="text-color-picker" data-color="#f6b100" style="background:#f6b100" aria-label="Amber"></button>
+              <button class="swatch" type="button" data-swatch-target="text-color-picker" data-color="#4ade80" style="background:#4ade80" aria-label="Green"></button>
+              <button class="swatch" type="button" data-swatch-target="text-color-picker" data-color="#ef4444" style="background:#ef4444" aria-label="Red"></button>
+              <button class="swatch" type="button" data-swatch-target="text-color-picker" data-color="#60a5fa" style="background:#60a5fa" aria-label="Blue"></button>
+              <button class="swatch" type="button" data-swatch-target="text-color-picker" data-color="#a78bfa" style="background:#a78bfa" aria-label="Violet"></button>
+            </div>
+            <input type="text" id="text-color" class="hex-box" value="#FFFFFF" maxlength="7" style="flex:1; min-width:0">
+          </div>
+          <input type="color" id="text-color-picker" value="#FFFFFF" class="hidden-picker" tabindex="-1" aria-hidden="true">
+        </div>
       </div>
 
-      <div id="stroke-controls" class="grid-2">
-        <div>
-          <label>Stroke Color</label>
-          <div class="color-input-wrapper">
-            <input type="color" id="stroke-color-picker" value="#000000">
-            <input type="text" id="stroke-color" class="input-dark" value="#000000">
+      <!-- Text Shadow panel -->
+      <div class="fx-panel" style="margin-bottom:14px">
+        <div class="fx-panel-head">
+          <span class="cg-label">Text Shadow</span>
+          <div class="fx-panel-head-right">
+            <span class="fx-status is-on" id="shadow-status">ON · 4px</span>
+            <label class="toggle-track-wrap" style="position:relative; display:inline-block;">
+              <input type="checkbox" id="shadow-enabled" class="toggle-cb" checked>
+              <span class="toggle-track"></span>
+            </label>
           </div>
         </div>
-        <div>
-          <label>Width</label>
-          <div class="range-with-value">
-            <input type="range" id="stroke-width" min="0" max="10" value="2">
-            <span>2px</span>
+        <div id="shadow-controls" class="fx-body">
+          <div class="fx-grid">
+            <div class="control-group">
+              <div class="cg-header"><span class="cg-label">Color</span></div>
+              <div style="display:flex; gap:10px; align-items:center">
+                <div class="swatches">
+                  <button class="swatch active" type="button" data-swatch-target="shadow-color-picker" data-color="#000000" style="background:#000000" aria-label="Black"></button>
+                  <button class="swatch" type="button" data-swatch-target="shadow-color-picker" data-color="#ffffff" style="background:#ffffff" aria-label="White"></button>
+                </div>
+                <input type="text" id="shadow-color" class="hex-box" value="rgba(0,0,0,0.8)" style="flex:1; min-width:0">
+              </div>
+              <input type="color" id="shadow-color-picker" value="#000000" class="hidden-picker" tabindex="-1" aria-hidden="true">
+            </div>
+            <div class="control-group">
+              <div class="cg-header">
+                <label for="shadow-blur" class="cg-label">Blur</label>
+                <span class="cg-value" data-display-for="shadow-blur">4px</span>
+              </div>
+              <div class="range-with-value">
+                <input type="range" id="shadow-blur" class="range" min="0" max="20" value="4">
+              </div>
+            </div>
+            <div class="control-group">
+              <div class="cg-header">
+                <label for="shadow-offset-x" class="cg-label">Offset X</label>
+                <span class="cg-value" data-display-for="shadow-offset-x">2px</span>
+              </div>
+              <div class="range-with-value">
+                <input type="range" id="shadow-offset-x" class="range" min="-10" max="10" value="2">
+              </div>
+            </div>
+            <div class="control-group">
+              <div class="cg-header">
+                <label for="shadow-offset-y" class="cg-label">Offset Y</label>
+                <span class="cg-value" data-display-for="shadow-offset-y">2px</span>
+              </div>
+              <div class="range-with-value">
+                <input type="range" id="shadow-offset-y" class="range" min="-10" max="10" value="2">
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
+
+      <!-- Text Stroke panel -->
+      <div class="fx-panel">
+        <div class="fx-panel-head">
+          <span class="cg-label">Text Stroke</span>
+          <div class="fx-panel-head-right">
+            <span class="fx-status is-on" id="stroke-status">ON · 2px</span>
+            <label class="toggle-track-wrap" style="position:relative; display:inline-block;">
+              <input type="checkbox" id="stroke-enabled" class="toggle-cb" checked>
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+        <div id="stroke-controls" class="fx-body">
+          <div class="fx-grid--2">
+            <div class="control-group">
+              <div class="cg-header"><span class="cg-label">Color</span></div>
+              <div style="display:flex; gap:10px; align-items:center">
+                <div class="swatches">
+                  <button class="swatch active" type="button" data-swatch-target="stroke-color-picker" data-color="#000000" style="background:#000000" aria-label="Black"></button>
+                  <button class="swatch" type="button" data-swatch-target="stroke-color-picker" data-color="#ffffff" style="background:#ffffff" aria-label="White"></button>
+                </div>
+                <input type="text" id="stroke-color" class="hex-box" value="#000000" style="flex:1; min-width:0">
+              </div>
+              <input type="color" id="stroke-color-picker" value="#000000" class="hidden-picker" tabindex="-1" aria-hidden="true">
+            </div>
+            <div class="control-group">
+              <div class="cg-header">
+                <label for="stroke-width" class="cg-label">Width</label>
+                <span class="cg-value" data-display-for="stroke-width">2px</span>
+              </div>
+              <div class="range-with-value">
+                <input type="range" id="stroke-width" class="range" min="0" max="10" value="2">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer control-footer">
+      <a href="https://github.com/SpaceG33k/obs-timer" target="_blank" rel="noopener noreferrer">github.com/SpaceG33k/obs-timer ↗</a>
+    </footer>
+  </main>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/timerUtils.js"></script>

@@ -48,7 +48,6 @@
   const strokeWidthSlider = document.getElementById('stroke-width');
 
   const copyUrlBtn = document.getElementById('copy-url');
-  const connectionDot = document.getElementById('connection-status');
 
   // Echo suppression: track which element the user is actively interacting with
   let activeInput = null;
@@ -78,11 +77,84 @@
     if (e.target.matches('input, select')) clearActiveInput();
   }, true);
 
-  // Cache slider display span elements to avoid fragile querySelector chains
-  const shadowBlurDisplay = shadowBlurSlider.closest('.range-with-value')?.querySelector('span');
-  const shadowOffsetXDisplay = shadowOffsetXSlider.closest('.range-with-value')?.querySelector('span');
-  const shadowOffsetYDisplay = shadowOffsetYSlider.closest('.range-with-value')?.querySelector('span');
-  const strokeWidthDisplay = strokeWidthSlider.closest('.range-with-value')?.querySelector('span');
+  // Cache slider display span elements (data-display-for hooks)
+  const shadowBlurDisplay = document.querySelector('[data-display-for="shadow-blur"]')
+    || shadowBlurSlider.closest('.range-with-value')?.querySelector('span');
+  const shadowOffsetXDisplay = document.querySelector('[data-display-for="shadow-offset-x"]')
+    || shadowOffsetXSlider.closest('.range-with-value')?.querySelector('span');
+  const shadowOffsetYDisplay = document.querySelector('[data-display-for="shadow-offset-y"]')
+    || shadowOffsetYSlider.closest('.range-with-value')?.querySelector('span');
+  const strokeWidthDisplay = document.querySelector('[data-display-for="stroke-width"]')
+    || strokeWidthSlider.closest('.range-with-value')?.querySelector('span');
+
+  // Caption strip + per-control live labels (broadcast redesign)
+  const captionLeft = document.querySelector('.preview-caption-left');
+  const captionRight = document.querySelector('.preview-caption-right');
+  const fontWeightDisplay = document.getElementById('font-weight-display');
+  const shadowStatus = document.getElementById('shadow-status');
+  const strokeStatus = document.getElementById('stroke-status');
+
+  const WEIGHT_NAME = { 300: 'Light', 400: 'Regular', 500: 'Medium', 600: 'Semi-Bold', 700: 'Bold', 800: 'Extra Bold', 900: 'Black' };
+
+  function setRangeFill(slider) {
+    if (!slider) return;
+    const min = Number(slider.min) || 0;
+    const max = Number(slider.max) || 100;
+    const val = Number(slider.value);
+    const pct = max === min ? 0 : ((val - min) / (max - min)) * 100;
+    slider.style.setProperty('--pct', pct + '%');
+  }
+
+  function setAllRangeFills() {
+    [fontWeightSelect, fontSizeSlider, shadowBlurSlider, shadowOffsetXSlider, shadowOffsetYSlider, strokeWidthSlider].forEach(setRangeFill);
+  }
+
+  function shortFontName(value) {
+    if (!value) return '';
+    return value.replace(/['"]/g, '').split(',')[0].trim();
+  }
+
+  function updateCaptions(state) {
+    if (captionLeft) {
+      const fam = shortFontName(state.font_family);
+      captionLeft.textContent = `◢ ${fam} · ${state.font_weight} · ${state.font_size}px · ${state.text_color}`;
+    }
+    if (fontWeightDisplay && state.font_weight) {
+      fontWeightDisplay.textContent = `${state.font_weight} · ${WEIGHT_NAME[state.font_weight] || ''}`;
+    }
+    if (fontSizeDisplay && state.font_size !== undefined) {
+      fontSizeDisplay.textContent = `${state.font_size} px`;
+    }
+    if (shadowStatus) {
+      if (state.shadow_enabled) {
+        shadowStatus.className = 'fx-status is-on';
+        shadowStatus.textContent = `ON · ${state.shadow_blur ?? 0}px`;
+      } else {
+        shadowStatus.className = 'fx-status is-off';
+        shadowStatus.textContent = 'OFF';
+      }
+    }
+    if (strokeStatus) {
+      if (state.stroke_enabled) {
+        strokeStatus.className = 'fx-status is-on';
+        strokeStatus.textContent = `ON · ${state.stroke_width ?? 0}px`;
+      } else {
+        strokeStatus.className = 'fx-status is-off';
+        strokeStatus.textContent = 'OFF';
+      }
+    }
+    // Sync active swatches with current color
+    document.querySelectorAll('[data-swatch-target]').forEach(b => {
+      const targetId = b.dataset.swatchTarget;
+      let currentColor = null;
+      if (targetId === 'text-color-picker') currentColor = state.text_color;
+      else if (targetId === 'shadow-color-picker') currentColor = state.shadow_color;
+      else if (targetId === 'stroke-color-picker') currentColor = state.stroke_color;
+      if (currentColor && b.dataset.color) {
+        b.classList.toggle('active', b.dataset.color.toLowerCase() === currentColor.toLowerCase());
+      }
+    });
+  }
 
   // Set timer name and OBS URL
   channelName.textContent = timer;
@@ -151,6 +223,7 @@
 
     setCheckedIfNotActive(shadowEnabled, !!state.shadow_enabled);
     shadowControls.style.opacity = state.shadow_enabled ? '1' : '0.5';
+    shadowControls.classList.toggle('disabled', !state.shadow_enabled);
     if (state.shadow_color) {
       setIfNotActive(shadowColorInput, state.shadow_color);
       if (shadowColorPicker !== activeInput) shadowColorPicker.value = state.shadow_color;
@@ -161,6 +234,7 @@
 
     setCheckedIfNotActive(strokeEnabled, !!state.stroke_enabled);
     strokeControls.style.opacity = state.stroke_enabled ? '1' : '0.5';
+    strokeControls.classList.toggle('disabled', !state.stroke_enabled);
     if (state.stroke_color) {
       setIfNotActive(strokeColorInput, state.stroke_color);
       if (strokeColorPicker !== activeInput) strokeColorPicker.value = state.stroke_color;
@@ -168,6 +242,8 @@
     if (state.stroke_width !== undefined) setIfNotActive(strokeWidthSlider, state.stroke_width);
 
     updateSliderDisplays();
+    setAllRangeFills();
+    updateCaptions(state);
     updateStatus(state.is_running);
   }
 
@@ -180,12 +256,6 @@
     if (strokeWidthDisplay) strokeWidthDisplay.textContent = strokeWidthSlider.value + 'px';
   }
 
-  // Connection status helpers
-  function setConnected(connected) {
-    connectionDot.classList.toggle('connected', connected);
-    connectionDot.classList.toggle('disconnected', !connected);
-  }
-
   // Shared handler for all state updates (initial, sync, config)
   function handleStateUpdate(state) {
     updateUIFromState(state);
@@ -194,19 +264,9 @@
 
   // Create connection
   const connection = createTimerConnection(timer, {
-    onConnect: () => {
-      console.log('Connected to server');
-      setConnected(true);
-    },
-
     onState: handleStateUpdate,
     onSync: handleStateUpdate,
     onConfigUpdate: handleStateUpdate,
-
-    onDisconnect: () => {
-      console.log('Disconnected');
-      setConnected(false);
-    }
   });
 
   // Start render loop for preview
@@ -219,6 +279,13 @@
     }
 
     timerPreview.textContent = formatTime(displayTime, state.format);
+
+    if (captionRight) {
+      const mode = state.mode || '';
+      const current = formatTime(displayTime, state.format);
+      const total = formatTime(state.duration_ms || 0, state.format);
+      captionRight.textContent = `${mode} · ${current} / ${total}`;
+    }
   });
 
   // Button handlers
@@ -297,10 +364,19 @@
   bindSelect(endBehaviorSelect, 'end_behavior');
   bindSelect(formatSelect, 'format');
   bindSelect(fontFamilySelect, 'font_family');
-  bindSelect(fontWeightSelect, 'font_weight', (v) => parseInt(v));
+
+  // Font weight is now a slider in the redesign (was a <select>). Live-preview on input, commit on change.
+  fontWeightSelect.addEventListener('input', () => {
+    timerPreview.style.fontWeight = fontWeightSelect.value;
+    setRangeFill(fontWeightSelect);
+  });
+  fontWeightSelect.addEventListener('change', () => {
+    updateConfig({ font_weight: parseInt(fontWeightSelect.value) });
+  });
 
   bindSlider(fontSizeSlider, fontSizeDisplay, 'font_size', (v) => {
     timerPreview.style.fontSize = v + 'px';
+    if (fontSizeDisplay) fontSizeDisplay.textContent = v + ' px';
   });
   bindColor(textColorPicker, textColorInput, 'text_color', (v) => {
     timerPreview.style.color = v;
@@ -326,4 +402,56 @@
       }, 2000);
     });
   });
+
+  // Preview background toggle (checker ↔ white) — purely local visual aid for testing shadow against bright backdrops
+  const previewBgToggle = document.getElementById('preview-bg-toggle');
+  const previewMonitor = document.querySelector('.preview-sticky .monitor');
+  if (previewBgToggle && previewMonitor) {
+    previewBgToggle.addEventListener('click', () => {
+      const white = previewMonitor.classList.toggle('monitor--white');
+      previewBgToggle.textContent = white ? 'BG: WHITE' : 'BG: CHECKER';
+      previewBgToggle.setAttribute('aria-pressed', white ? 'true' : 'false');
+    });
+  }
+
+  // Swatches → relay click to hidden native color picker, dispatch input + change to reuse bindColor wiring
+  document.querySelectorAll('[data-swatch-target]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = document.getElementById(btn.dataset.swatchTarget);
+      if (!target) return;
+      target.value = btn.dataset.color;
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+      target.dispatchEvent(new Event('change', { bubbles: true }));
+      btn.parentElement?.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // Live caption refresh: any local input/change updates the captions and slider fills
+  function readLiveState() {
+    return {
+      font_family: fontFamilySelect.value,
+      font_weight: parseInt(fontWeightSelect.value),
+      font_size: parseInt(fontSizeSlider.value),
+      text_color: textColorInput.value || textColorPicker.value,
+      shadow_enabled: shadowEnabled.checked,
+      shadow_blur: parseInt(shadowBlurSlider.value),
+      shadow_color: shadowColorInput.value,
+      stroke_enabled: strokeEnabled.checked,
+      stroke_width: parseInt(strokeWidthSlider.value),
+      stroke_color: strokeColorInput.value,
+    };
+  }
+
+  function refreshLocal() {
+    setAllRangeFills();
+    updateCaptions(readLiveState());
+  }
+
+  document.addEventListener('input', refreshLocal);
+  document.addEventListener('change', refreshLocal);
+
+  // Initial paint
+  setAllRangeFills();
+  updateCaptions(readLiveState());
 })();
