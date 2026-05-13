@@ -20,5 +20,11 @@
     "@tailwindcss/cli": "^4",
     "nodemon": "^3.1.7",
     "tailwindcss": "^4"
+  },
+  "overrides": {
+    "picomatch@<2.3.2": "2.3.2",
+    "picomatch@>=4.0.0 <4.0.4": "4.0.4",
+    "path-to-regexp@<0.1.13": "0.1.13",
+    "socket.io-parser@<4.2.6": "4.2.6"
   }
 }
