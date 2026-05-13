@@ -1,29 +1,14 @@
-# Stage 1: Build Tailwind CSS
-FROM node:20-alpine AS builder
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm ci
-
-COPY src/ ./src/
-COPY public/ ./public/
-
-# Build Tailwind CSS
-RUN npm run build:css
-
-# Stage 2: Production Image
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Install only production dependencies
+# Install production dependencies
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Copy application code
 COPY src/ ./src/
-COPY --from=builder /app/public/ ./public/
+COPY public/ ./public/
 
 # Create data directory for SQLite
 RUN mkdir -p /app/data
